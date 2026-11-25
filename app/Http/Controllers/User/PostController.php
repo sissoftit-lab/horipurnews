@@ -16,32 +16,34 @@ class PostController extends Controller
         $this->middleware('auth');
     }
 
-    public function datatables(Request $request){
-        $input = $request->all();
+    private function validDate($value): ?string
+    {
+        $d = is_string($value) ? \DateTime::createFromFormat('Y-m-d', $value) : false;
 
-        if(isset($input['lang']) || isset($input['category'])){
-            if(isset($input['lang'])){
-                $datas = Post::whereUserId(auth()->id())
-                                ->where('status','=','true')
-                                ->where('language_id',$input['lang'])
-                                ->where('schedule_post','=',0)
-                                ->where('schedule_post_date','=',NULL)
-                                ->orderBy('id','desc');
-            }
-            if(isset($input['category'])){
-                $datas = Post::whereUserId(auth()->id())
-                                ->where('status','=','true')
-                                ->where('category_id',$input['category'])
-                                ->where('schedule_post','=',0)
-                                ->where('schedule_post_date','=',NULL)
-                                ->orderBy('id','desc');
-            }
-        }else{
-            $datas = Post::whereUserId(auth()->id())
-                            ->where('status','=','true')
-                            ->where('schedule_post','=',0)
-                            ->where('schedule_post_date','=',NULL)
-                            ->orderBy('id','desc');
+        return $d && $d->format('Y-m-d') === $value ? $value : null;
+    }
+
+    public function datatables(Request $request){
+        $datas = Post::whereUserId(auth()->id())
+                        ->where('status','=','true')
+                        ->where('schedule_post','=',0)
+                        ->whereNull('schedule_post_date')
+                        ->orderBy('id','desc');
+
+        if($request->filled('category')){
+            $datas->where('category_id',$request->input('category'));
+        }elseif($request->filled('lang')){
+            $datas->where('language_id',$request->input('lang'));
+        }
+
+        // Optional created_at range (Y-m-d), sent by the daterangepicker.
+        $from = $this->validDate($request->input('from'));
+        $to = $this->validDate($request->input('to'));
+        if($from){
+            $datas->where('created_at','>=',$from.' 00:00:00');
+        }
+        if($to){
+            $datas->where('created_at','<=',$to.' 23:59:59');
         }
 
         return Datatables::of($datas)

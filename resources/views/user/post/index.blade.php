@@ -35,6 +35,10 @@
 
                 </select>
             </div>
+            <div class="col-sm-3 m-3">
+                <label ><b>{{__('Date Range')}}</b></label>
+                <input type="text" id="date_range" class="form-control" autocomplete="off" placeholder="{{ __('All dates') }}" readonly>
+            </div>
         </div>
         <div class="row">
             <div class="col-lg-12">
@@ -158,18 +162,32 @@
 @endsection
 
 
+@section('styles')
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-daterangepicker/3.1/daterangepicker.min.css">
+@endsection
+
 @section('scripts')
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-daterangepicker/3.1/daterangepicker.min.js"></script>
 
 <script type="text/javascript">
     "use strict";
 
     var table;
+    var dateFrom = '', dateTo = '';
 
      table = $('#geniustable').DataTable({
         ordering: false,
         processing: true,
         serverSide: true,
-        ajax: $('#filter_lang option:selected').data('href') || '{{ route('user.post.datatables') }}',
+        ajax: {
+            url: $('#filter_lang option:selected').data('href') || '{{ route('user.post.datatables') }}',
+            data: function (d) {
+                d.from = dateFrom;
+                d.to = dateTo;
+            }
+        },
         columns: [
             {data: 'image_big',name: 'image_big'},
             {data: 'title',name: 'title'},
@@ -186,6 +204,30 @@
         drawCallback: function (settings) {
             $('.select').niceSelect();
         }
+    });
+
+    $('#date_range').daterangepicker({
+        autoUpdateInput: false,
+        opens: 'right',
+        maxDate: moment(),
+        locale: { cancelLabel: 'Clear', format: 'YYYY-MM-DD' },
+        ranges: {
+            'Today': [moment(), moment()],
+            'Yesterday': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+            'Last 7 Days': [moment().subtract(6, 'days'), moment()],
+            'Last 30 Days': [moment().subtract(29, 'days'), moment()],
+            'This Month': [moment().startOf('month'), moment().endOf('month')],
+            'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
+        }
+    }).on('apply.daterangepicker', function (ev, picker) {
+        dateFrom = picker.startDate.format('YYYY-MM-DD');
+        dateTo = picker.endDate.format('YYYY-MM-DD');
+        $(this).val(dateFrom + ' - ' + dateTo);
+        table.ajax.reload();
+    }).on('cancel.daterangepicker', function () {
+        dateFrom = dateTo = '';
+        $(this).val('');
+        table.ajax.reload();
     });
 
 </script>

@@ -56,6 +56,16 @@ class PostController extends Controller
             $query->where('language_id', $request->input('lang'));
         }
 
+        // Optional created_at range (Y-m-d), sent by the daterangepicker.
+        $from = $this->validDate($request->input('from'));
+        $to = $this->validDate($request->input('to'));
+        if ($from) {
+            $query->where('created_at', '>=', $from . ' 00:00:00');
+        }
+        if ($to) {
+            $query->where('created_at', '<=', $to . ' 23:59:59');
+        }
+
         return Datatables::of($query)
             ->addColumn('action', function (Post $data) {
                 $links = [];
@@ -229,6 +239,13 @@ class PostController extends Controller
     /* ------------------------------------------------------------------
      |  Helpers
      * ------------------------------------------------------------------ */
+
+    private function validDate($value): ?string
+    {
+        $d = is_string($value) ? \DateTime::createFromFormat('Y-m-d', $value) : false;
+
+        return $d && $d->format('Y-m-d') === $value ? $value : null;
+    }
 
     private function toggleLink(string $route, int $id, bool $active, string $addLabel, string $removeLabel): string
     {
