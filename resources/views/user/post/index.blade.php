@@ -169,7 +169,7 @@
         ordering: false,
         processing: true,
         serverSide: true,
-        ajax: '{{ route('user.post.datatables') }}',
+        ajax: $('#filter_lang option:selected').data('href') || '{{ route('user.post.datatables') }}',
         columns: [
             {data: 'image_big',name: 'image_big'},
             {data: 'title',name: 'title'},

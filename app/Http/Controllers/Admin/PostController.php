@@ -6,466 +6,333 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Models\Post;
 use App\Models\Category;
-use App\Models\Gallery;
 use App\Models\Language;
-use App\Models\View;
 use App\Models\Advertisement;
-use Carbon\Carbon;
 use Datatables;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class PostController extends Controller
 {
+    /** Columns the listing needs (skips the heavy `description` column). */
+    private const LIST_COLUMNS = [
+        'id', 'title', 'slug', 'category_id', 'language_id', 'post_type', 'image_big', 'rss_image',
+        'admin_id', 'user_id', 'is_slider', 'is_trending', 'is_feature', 'slider_right', 'is_pending', 'created_at',
+    ];
+
     public function __construct()
     {
         $this->middleware('auth:admin');
     }
 
-    public function datatables(Request $request){
+    /* ------------------------------------------------------------------
+     |  Listing
+     * ------------------------------------------------------------------ */
 
-        $input = $request->all();
-        $user = Auth::guard('admin')->user()->role;
-        $default_language = Language::where('is_default',1)->first();
-        if($user->name != 'admin' && $user->name != 'moderator'){
-            if(isset($input['lang']) || isset($input['category'])){
-                if(isset($input['lang'])){
-                    $datas = Auth::guard('admin')->user()->filterByLanguage($input['lang']); //filterByLanguage in Admin Model
-                }
-                if(isset($input['category'])){
-                    $datas = Auth::guard('admin')->user()->filterByCategory($input['category']);  //filterByCategory in Admin Model
-                }
-            }else{
-                $datas = Auth::guard('admin')->user()->posts()
-                ->where('status','=','true')
-                ->where('schedule_post','=',0)
-                ->where('schedule_post_date','=',NULL)
-                ->orderBy('id','desc')
-                ->get();
-            }
-        }
-        else{
-            if(isset($input['lang']) || isset($input['category'])){
-                if(isset($input['lang'])){
-                    $datas = Post::where('status','=','true')
-                                    ->where('language_id',$input['lang'])
-                                    ->where('schedule_post','=',0)
-                                    ->where('schedule_post_date','=',NULL)
-                                    ->orderBy('id','desc')
-                                    ->get();
-                }
-                if(isset($input['category'])){
-                    $datas = Post::where('status','=','true')
-                                    ->where('category_id',$input['category'])
-                                    ->where('schedule_post','=',0)
-                                    ->where('schedule_post_date','=',NULL)
-                                    ->orderBy('id','desc')
-                                    ->get();
-                }
-            }else{
-                $datas = Post::where('status','=','true')
-                        ->where('schedule_post','=',0)
-                        ->where('schedule_post_date','=',NULL)
-                        ->orderBy('id','desc')
-                        ->get();
-            }
-        }
-        return Datatables::of($datas)
-                            ->addColumn('action', function(Post $data) {
-                                $slider = $data->is_slider == 0 ? '<a href="'.route('post.sliderChange',$data->id).'"><i class="fa fa-plus"></i> Add Into Slider</a>' : '<a href="'.route('post.sliderChange',$data->id).'"><i class="fa fa-minus"></i> Remove From Slider</a>';
-                                $is_trending = $data->is_trending == 0 ? '<a href="'.route('post.trendingChange',$data->id).'"><i class="fa fa-plus"></i> Add Into Breaking</a>' : '<a href="'.route('post.trendingChange',$data->id).'"><i class="fa fa-minus"></i> Remove Breaking</a>';
-                                $is_approve = $data->is_pending == 0 ? '<a href="'.route('post.pendingChange',$data->id).'"><i class="fa fa-file"></i> Make Post Pending</a>' : '<a href="'.route('post.pendingChange',$data->id).'"><i class="fa fa-file"></i> Make Post Approve</a>';
-                                $is_slider_lefts = $data->is_feature == 0 ? '<a href="'.route('post.feature',$data->id).'"><i class="fa fa-plus"></i> Add into Feature</a>' : '<a href="'.route('post.feature',$data->id).'"><i class="fa fa-minus"></i> Remove Feature</a>';
-                                $is_slider_rights = $data->slider_right == 0 ? '<a href="'.route('post.sliderright',$data->id).'"><i class="fa fa-plus"></i> Add into sliderRight</a>' : '<a href="'.route('post.sliderright',$data->id).'"><i class="fa fa-minus"></i> Remove sliderRight</a>';
-                                if($data->post_type=='rss'){
-                                    $edit = '';
-                                }else{
-                                    $edit = '<a href="'.route('post.edit',$data->id).'"> <i class="fas fa-edit"></i> Edit</a>';
-                                }
-                                $details = '<a href="'.route('frontend.postBySubcategory.details',[$data->category->slug,$data->slug]).'" target="_blank"> <i class="fa fa-info-circle" aria-hidden="true"></i> View on Frontend</a>';
-                                return '<div class="godropdown"><button class="go-dropdown-toggle"> Actions<i class="fas fa-chevron-down"></i></button><div class="action-list">'.$details.''.$edit.''.$slider.''.$is_trending.''.$is_slider_lefts.''.$is_slider_rights.''. $is_approve.'<a href="javascript:;" data-href="'.route('post.delete',$data->id).'" data-toggle="modal" data-target="#confirm-delete" class="delete"><i class="fas fa-trash-alt"></i> Delete</a></div></div>';
-                            })
-                            ->addColumn('checkbox',function(Post $data){
-                                $id = $data->id;
-                                return $checkbox = $data->id ? '<input type="checkbox" class="form-check-input m-0 p-0 postCheck" value="'.$id.'">':'';
-                            })
-                            ->editColumn('category_id',function(Post $data){
-                                $category_id = $data->category_id ? '<span class="badge badge-primary">'.$data->category->title.'</span>' : '';
-                                return $category_id;
-                            })
-                            ->editColumn('language_id',function(Post $data){
-                                $language_id = $data->language_id ? '<span class="badge badge-info">'.$data->language->language.'</span>' : '';
-                                return $language_id;
-                            })
-                            ->addColumn('is_approve',function(Post $data){
-                                if($data->is_pending != 0){
-                                    return '<span class="badge badge-warning text-white">pending</span>';
-                                }else{
-                                    return '<span class="badge badge-success">approve</span>';
-                                }
-                            })
-                            ->editColumn('post_type',function(Post $data){
-                                $post_type = $data->post_type ? '<span class="badge badge-secondary">'.$data->post_type.'</span>': '';
-                                return $post_type;
-                            })
-                            ->editColumn('image_big',function(Post $data){
-                                if($data->post_type == 'rss'){
-                                    $rss_image = $data->rss_image ?  $data->rss_image:url('assets/images/nopic.png');
-                                    return '<img src="'.$rss_image.'" alt="Image">';
-                                }else{
-                                    $image_big = $data->image_big ? url('assets/images/post/'.$data->image_big):url('assets/images/nopic.png');
-                                    return '<img src="'.$image_big.'" alt="Image">';
-                                }
-                            })
-                            ->editColumn('created_at',function(Post $data){
-                                $created_at = $data->created_at;
-                                return $created_at->toFormattedDateString();
-                            })
-                            ->editColumn('admin_id',function(Post $data){
-                                $name = $data->admin_id == 0 ? ($data->user_id != 0 ? $data->user->name : 'User Deleted') : $data->admin->name;
-                                return $name;
-                            })
-                            ->rawColumns(['checkbox','image_big','category_id','language_id','action','is_approve','post_type','created_at','admin_id'])
-                            ->toJson(); //--- Returning Json Data To Client Side
-    }
-    public function index(Request $request){
-        
+    public function index(Request $request)
+    {
         return view('admin.post.index');
     }
 
-    public function categoryFilter($id){
-        $datas = Language::find($id)->categories()->where('parent_id',NULL)->get();
-        $output = '<option data-href="'.route('post.datatables').'?category=&lang='.$id.'">All</option>';
-        foreach($datas as $data){
-            $output .= '<option data-href="'.route('post.datatables').'?category='.$data->id.'">'.$data->title.'</option>';
+    public function datatables(Request $request)
+    {
+        $admin = Auth::guard('admin')->user();
+
+        // Single query builder: paging/search happen in SQL instead of loading every post into memory.
+        $query = Post::query()
+            ->select(self::LIST_COLUMNS)
+            ->with(['category:id,title,slug', 'language:id,language', 'admin:id,name', 'user:id,name'])
+            ->where('status', 'true')
+            ->where('schedule_post', 0)
+            ->whereNull('schedule_post_date')
+            ->orderByDesc('id');
+
+        if (!in_array($admin->role->name, ['admin', 'moderator'])) {
+            $query->where('admin_id', $admin->id);
+        }
+        if ($request->filled('category')) {
+            $query->where('category_id', $request->input('category'));
+        } elseif ($request->filled('lang')) {
+            $query->where('language_id', $request->input('lang'));
+        }
+
+        return Datatables::of($query)
+            ->addColumn('action', function (Post $data) {
+                $links = [];
+                $links[] = '<a href="' . route('frontend.postBySubcategory.details', [$data->category->slug, $data->slug]) . '" target="_blank"> <i class="fa fa-info-circle" aria-hidden="true"></i> View on Frontend</a>';
+                if ($data->post_type != 'rss') {
+                    $links[] = '<a href="' . route('post.edit', $data->id) . '"> <i class="fas fa-edit"></i> Edit</a>';
+                }
+                $links[] = $this->toggleLink('post.sliderChange', $data->id, $data->is_slider != 0, 'Add Into Slider', 'Remove From Slider');
+                $links[] = $this->toggleLink('post.trendingChange', $data->id, $data->is_trending != 0, 'Add Into Breaking', 'Remove Breaking');
+                $links[] = $this->toggleLink('post.feature', $data->id, $data->is_feature != 0, 'Add into Feature', 'Remove Feature');
+                $links[] = $this->toggleLink('post.sliderright', $data->id, $data->slider_right != 0, 'Add into sliderRight', 'Remove sliderRight');
+                $links[] = '<a href="' . route('post.pendingChange', $data->id) . '"><i class="fa fa-file"></i> ' . ($data->is_pending == 0 ? 'Make Post Pending' : 'Make Post Approve') . '</a>';
+                $links[] = '<a href="javascript:;" data-href="' . route('post.delete', $data->id) . '" data-toggle="modal" data-target="#confirm-delete" class="delete"><i class="fas fa-trash-alt"></i> Delete</a>';
+
+                return '<div class="godropdown"><button class="go-dropdown-toggle"> Actions<i class="fas fa-chevron-down"></i></button><div class="action-list">' . implode('', $links) . '</div></div>';
+            })
+            ->addColumn('checkbox', function (Post $data) {
+                return '<input type="checkbox" class="form-check-input m-0 p-0 postCheck" value="' . $data->id . '">';
+            })
+            ->editColumn('category_id', function (Post $data) {
+                return $data->category_id ? '<span class="badge badge-primary">' . e($data->category->title) . '</span>' : '';
+            })
+            ->editColumn('language_id', function (Post $data) {
+                return $data->language_id ? '<span class="badge badge-info">' . e($data->language->language) . '</span>' : '';
+            })
+            ->addColumn('is_approve', function (Post $data) {
+                return $data->is_pending != 0
+                    ? '<span class="badge badge-warning text-white">pending</span>'
+                    : '<span class="badge badge-success">approve</span>';
+            })
+            ->editColumn('post_type', function (Post $data) {
+                return $data->post_type ? '<span class="badge badge-secondary">' . e($data->post_type) . '</span>' : '';
+            })
+            ->editColumn('image_big', function (Post $data) {
+                if ($data->post_type == 'rss') {
+                    $src = $data->rss_image ?: url('assets/images/nopic.png');
+                } else {
+                    $src = $data->image_big ? url('assets/images/post/' . $data->image_big) : url('assets/images/nopic.png');
+                }
+                return '<img src="' . e($src) . '" alt="Image" loading="lazy">';
+            })
+            ->editColumn('created_at', function (Post $data) {
+                return $data->created_at->toFormattedDateString();
+            })
+            ->editColumn('admin_id', function (Post $data) {
+                if ($data->admin_id != 0) {
+                    return e($data->admin->name);
+                }
+                return $data->user_id != 0 ? e($data->user->name) : 'User Deleted';
+            })
+            ->rawColumns(['checkbox', 'image_big', 'category_id', 'language_id', 'action', 'is_approve', 'post_type', 'created_at', 'admin_id'])
+            ->toJson();
+    }
+
+    public function categoryFilter($id)
+    {
+        $datas = Language::findOrFail($id)->categories()->whereNull('parent_id')->get(['id', 'title']);
+        $base = route('post.datatables');
+
+        $output = '<option data-href="' . $base . '?category=&lang=' . (int) $id . '">All</option>';
+        foreach ($datas as $data) {
+            $output .= '<option data-href="' . $base . '?category=' . $data->id . '">' . e($data->title) . '</option>';
         }
         return $output;
     }
 
-    public function edit($id){
-    
-        $individual_posts    = Advertisement::where('add_placement','individual_post')
-                                ->where('status',1)
-                                ->get();
-                                
-        $data = Post::find($id);
-        
-        $categories = Category::where('parent_id','=',NULL)->get();
-        $languages = Language::orderBy('id','desc')->get();
+    /* ------------------------------------------------------------------
+     |  Edit / view
+     * ------------------------------------------------------------------ */
 
-        if($data->post_type == 'article'){
-            return view('admin.article.edit',compact('categories','languages','data','individual_posts'));
-        }
-        elseif($data->post_type == 'video')
-        {
-            return view('admin.video.edit',compact('categories','languages','data'));
-        }
-        elseif($data->post_type == 'Sorted List')
-        {
-            return view('admin.shortlist.edit',compact('categories','languages','data'));
-        }
-        elseif($data->post_type == 'Trivia Quiz'){
-            return view('admin.quiz.edit',compact('categories','languages','data'));
-        }
-        elseif($data->post_type == 'Personality Quiz'){
-            return view('admin.pquiz.edit',compact('categories','languages','data'));
-        }
-        else{
-            return view('admin.audio.edit',compact('categories','languages','data'));
+    public function edit($id)
+    {
+        $data = Post::findOrFail($id);
+
+        $categories = Category::whereNull('parent_id')->get();
+        $languages = Language::orderBy('id', 'desc')->get();
+
+        switch ($data->post_type) {
+            case 'article':
+                $individual_posts = Advertisement::where('add_placement', 'individual_post')->where('status', 1)->get();
+                return view('admin.article.edit', compact('categories', 'languages', 'data', 'individual_posts'));
+            case 'video':
+                return view('admin.video.edit', compact('categories', 'languages', 'data'));
+            case 'Sorted List':
+                return view('admin.shortlist.edit', compact('categories', 'languages', 'data'));
+            case 'Trivia Quiz':
+                return view('admin.quiz.edit', compact('categories', 'languages', 'data'));
+            case 'Personality Quiz':
+                return view('admin.pquiz.edit', compact('categories', 'languages', 'data'));
+            default:
+                return view('admin.audio.edit', compact('categories', 'languages', 'data'));
         }
     }
 
-    public function view($id){
-        $data = Post::find($id);
-        if($data->post_type == 'article'){
-            return view('admin.article.view',compact('data'));
-        }
+    public function view($id)
+    {
+        $data = Post::findOrFail($id);
+        abort_unless($data->post_type == 'article', 404);
+
+        return view('admin.article.view', compact('data'));
     }
 
-    public function sliderChange($id){
-        $data = Post::find($id);
+    /* ------------------------------------------------------------------
+     |  Single toggles
+     * ------------------------------------------------------------------ */
 
-        if($data->is_slider == 1){
-           $data->is_slider = 0;
-        }else{
-            $data->is_slider = 1;
-        }
-        $data->update();
-        return back()->with('success','Slider Status Updated successfully!');
+    public function sliderChange($id)
+    {
+        return $this->toggle($id, 'is_slider', 'Slider Status Updated successfully!');
     }
 
-    public function sliderBulk(Request $request){
-        $datas =  explode(',',$request->ids);
-        foreach($datas as $data){
-            $post = Post::findOrFail($data);
-            if($post->is_slider == 0){
-               $post->update(['is_slider'=> 1]);
-            }
-        }
-        return back()->with('success','Data Updated successfully!');
+    public function trendingChange($id)
+    {
+        return $this->toggle($id, 'is_trending', 'Breaking News Status Updated successfully!');
     }
 
-    public function removesliderBulk(Request $request){
-        $datas =  explode(',',$request->ids);
-        foreach($datas as $data){
-            $post = Post::findOrFail($data);
-            if($post->is_slider == 1){
-               $post->update(['is_slider'=> 0]);
-            }
-        }
-        return back()->with('success','Data Updated successfully!');
+    public function featureChange($id)
+    {
+        return $this->toggle($id, 'is_feature', 'Data Updated successfully!');
     }
 
-    public function breakingBulk(Request $request){
-        $datas =  explode(',',$request->ids);
-        foreach($datas as $data){
-            $post = Post::findOrFail($data);
-            if($post->is_trending == 0){
-               $post->update(['is_trending'=> 1]);
-            }
-        }
-        return back()->with('success','Data Updated successfully!');
+    public function sliderright($id)
+    {
+        return $this->toggle($id, 'slider_right', 'Data Updated successfully!');
     }
 
-    public function removebreakingBulk(Request $request){
-        $datas =  explode(',',$request->ids);
-        foreach($datas as $data){
-            $post = Post::findOrFail($data);
-            if($post->is_trending == 1){
-               $post->update(['is_trending'=> 0]);
-            }
-        }
-        return back()->with('success','Data Updated successfully!');
-    }
-    public function featureBulk(Request $request){
-        $datas =  explode(',',$request->ids);
-        foreach($datas as $data){
-            $post = Post::findOrFail($data);
-            if($post->is_feature == 0){
-               $post->update(['is_feature'=> 1]);
-            }
-        }
-        return back()->with('success','Data Updated successfully!');
+    public function pendingChange($id)
+    {
+        return $this->toggle($id, 'is_pending', 'Pending Status Updated successfully!');
     }
 
-    public function removefeatureBulk(Request $request){
-        $datas =  explode(',',$request->ids);
-        foreach($datas as $data){
-            $post = Post::findOrFail($data);
-            if($post->is_feature == 1){
-               $post->update(['is_feature'=> 0]);
-            }
-        }
-        return back()->with('success','Data Updated successfully!');
+    /* ------------------------------------------------------------------
+     |  Bulk flag changes (one UPDATE query each)
+     * ------------------------------------------------------------------ */
+
+    public function sliderBulk(Request $request)         { return $this->bulkFlag($request, 'is_slider', 1); }
+    public function removesliderBulk(Request $request)   { return $this->bulkFlag($request, 'is_slider', 0); }
+    public function breakingBulk(Request $request)       { return $this->bulkFlag($request, 'is_trending', 1); }
+    public function removebreakingBulk(Request $request) { return $this->bulkFlag($request, 'is_trending', 0); }
+    public function featureBulk(Request $request)        { return $this->bulkFlag($request, 'is_feature', 1); }
+    public function removefeatureBulk(Request $request)  { return $this->bulkFlag($request, 'is_feature', 0); }
+    public function rightBulk(Request $request)          { return $this->bulkFlag($request, 'slider_right', 1); }
+    public function removerightBulk(Request $request)    { return $this->bulkFlag($request, 'slider_right', 0); }
+
+    /* ------------------------------------------------------------------
+     |  Delete
+     * ------------------------------------------------------------------ */
+
+    public function delete($id)
+    {
+        $posts = Post::whereKey($id)->get();
+        abort_if($posts->isEmpty(), 404);
+        $this->destroyPosts($posts);
+
+        return response()->json('Data Successfully Deleted');
     }
 
-    public function rightBulk(Request $request){
-        $datas =  explode(',',$request->ids);
-        foreach($datas as $data){
-            $post = Post::findOrFail($data);
-            if($post->slider_right == 0){
-               $post->update(['slider_right'=> 1]);
+    public function bulkdelete(Request $request)
+    {
+        $ids = $this->parseIds($request);
+        if ($ids) {
+            // chunk to keep memory flat when many posts are selected
+            foreach (array_chunk($ids, 50) as $chunk) {
+                $this->destroyPosts(Post::whereIn('id', $chunk)->get());
             }
         }
-        return back()->with('success','Data Updated successfully!');
+
+        return back()->with('success', 'Data Deleted successfully!');
     }
 
-    public function removerightBulk(Request $request){
-        $datas =  explode(',',$request->ids);
-        foreach($datas as $data){
-            $post = Post::findOrFail($data);
-            if($post->slider_right == 1){
-               $post->update(['slider_right'=> 0]);
-            }
-        }
-        return back()->with('success','Data Updated successfully!');
+    /* ------------------------------------------------------------------
+     |  Helpers
+     * ------------------------------------------------------------------ */
+
+    private function toggleLink(string $route, int $id, bool $active, string $addLabel, string $removeLabel): string
+    {
+        return '<a href="' . route($route, $id) . '"><i class="fa fa-' . ($active ? 'minus' : 'plus') . '"></i> ' . ($active ? $removeLabel : $addLabel) . '</a>';
     }
 
-    public function trendingChange($id){
-        $data = Post::find($id);
+    private function toggle($id, string $field, string $message)
+    {
+        $post = Post::findOrFail($id);
+        $post->update([$field => $post->$field == 1 ? 0 : 1]);
 
-        if($data->is_trending == 1){
-           $data->is_trending = 0;
-        }else{
-            $data->is_trending = 1;
-        }
-        $data->update();
-        return back()->with('success','Breaking News Status Updated successfully!');
+        return back()->with('success', $message);
     }
 
-    public function featureChange($id){
-        $data = Post::find($id);
+    private function parseIds(Request $request): array
+    {
+        $ids = $request->input('ids', []);
+        $ids = is_array($ids) ? $ids : explode(',', (string) $ids);
 
-        if($data->is_feature == 1){
-           $data->is_feature = 0;
-        }else{
-            $data->is_feature = 1;
-        }
-        $data->update();
-        return back()->with('success','Data Updated successfully!');
+        return array_values(array_unique(array_filter(array_map('intval', $ids))));
     }
 
-    public function sliderright($id){
-        $data = Post::find($id);
-
-        if($data->slider_right == 1){
-           $data->slider_right = 0;
-        }else{
-            $data->slider_right = 1;
+    private function bulkFlag(Request $request, string $field, int $value)
+    {
+        $ids = $this->parseIds($request);
+        if ($ids) {
+            Post::whereIn('id', $ids)->where($field, '!=', $value)->update([$field => $value]);
+            site_cache_bump(); // mass updates fire no model events, so bust the frontend cache manually
         }
-        $data->update();
-        return back()->with('success','Data Updated successfully!');
+
+        return back()->with('success', 'Data Updated successfully!');
     }
 
-    public function pendingChange($id){
-        $data = Post::find($id);
+    /**
+     * Delete posts together with their related rows and files.
+     * Rows are removed inside a transaction; files are unlinked only after it commits.
+     */
+    private function destroyPosts($posts): void
+    {
+        $posts->load(['tquizs.answers', 'tresults', 'pquizs.answers', 'presults', 'sorts']);
 
-        if($data->is_pending == 1){
-           $data->is_pending = 0;
-        }else{
-            $data->is_pending = 1;
-        }
-        $data->update();
-        return back()->with('success','Pending Status Updated successfully!');
-    }
+        $files = [];
+        $add = function (string $dir, $name) use (&$files) {
+            if ($name) {
+                $files[] = public_path($dir . '/' . $name);
+            }
+        };
 
-    public function delete($id){
-        $data = Post::find($id);
-        foreach($data->views as $view){
-           $view->delete();
-        }
-        if($data->post_type == 'audio'){
-            @unlink('assets/audios/'.$data->audio);
-        }
-        if($data->post_type == 'video'){
-            @unlink('assets/videos/'.$data->video);
-        }
-        if($data->post_type == 'Trivia Quiz'){
-            if($data->tquizs->count()>0){
-                foreach ($data->tquizs as $quiz) {
-                   if($quiz->answers->count()>0){
-                       foreach($quiz->answers as $answer){
-                        @unlink('assets/images/quizanswer/'.$answer->answer_photo);
-                        $answer->delete();
-                       }
-                   }
-                   @unlink('assets/images/quiz/'.$quiz->question_photo);
-                   $quiz->delete();
-                }
-            }
-            if($data->tresults->count()>0){
-                foreach($data->tresults as $tresult){
-                    @unlink('assets/images/quizresult/'.$tresult->result_photo);
-                    $tresult->delete();
-                }
-            }
-        }
+        DB::transaction(function () use ($posts, $add) {
+            foreach ($posts as $post) {
+                $post->views()->delete();
 
-        if($data->post_type == 'Personality Quiz'){
-            if($data->pquizs->count()>0){
-                foreach ($data->pquizs as $quiz) {
-                   if($quiz->answers->count()>0){
-                       foreach($quiz->answers as $answer){
-                        @unlink('assets/images/panswer/'.$answer->answer_photo);
-                        $answer->delete();
-                       }
-                   }
-                   @unlink('assets/images/pquiz/'.$quiz->question_photo);
-                   $quiz->delete();
-                }
-            }
-
-            if($data->presults->count()>0){
-                foreach($data->presults as $presult){
-                    @unlink('assets/images/presult/'.$presult->result_photo);
-                    $presult->delete();
-                }
-            }
-        }
-
-        if($data->post_type == 'Sorted List'){
-            if($data->sorts->count()>0){
-                foreach($data->sorts as $sort){
-                    @unlink('assets/images/sort/'.$sort->item_photo);
-                    $sort->delete();
-                }
-            }
-        }
-
-        @unlink('assets/images/post/'.$data->image_big);
-        $data->delete();
-        $msg = 'Data Successfully Deleted';
-        return response()->json($msg);
-    }
-
-    public function bulkdelete(Request $request){
-        $datas =  explode(',',$request->ids);
-        foreach($datas as $data){
-            $views = Post::find($data)->views;
-            foreach($views as $view){
-                $view->delete();
-             }
-            $post = Post::findOrFail($data);
-            if($post->post_type == 'audio'){
-                @unlink('assets/audios/'.$data->audio);
-            }
-            if($post->post_type == 'video'){
-                @unlink('assets/videos/'.$data->video);
-            }
-            if($post->post_type == 'Trivia Quiz'){
-                if($post->tquizs->count()>0){
-                    foreach ($post->tquizs as $quiz) {
-                       if($quiz->answers->count()>0){
-                           foreach($quiz->answers as $answer){
-                            @unlink('assets/images/quizanswer/'.$answer->answer_photo);
-                            $answer->delete();
-                           }
-                       }
-                       @unlink('assets/images/quiz/'.$quiz->question_photo);
-                       $quiz->delete();
-                    }
-                }
-                if($post->tresults->count()>0){
-                    foreach($post->tresults as $tresult){
-                        @unlink('assets/images/quizresult/'.$tresult->result_photo);
-                        $tresult->delete();
-                    }
-                }
-            }
-
-            if($post->post_type == 'Personality Quiz'){
-                if($post->pquizs->count()>0){
-                    foreach ($post->pquizs as $quiz) {
-                       if($quiz->answers->count()>0){
-                           foreach($quiz->answers as $answer){
-                            @unlink('assets/images/panswer/'.$answer->answer_photo);
-                            $answer->delete();
-                           }
-                       }
-                       @unlink('assets/images/pquiz/'.$quiz->question_photo);
-                       $quiz->delete();
-                    }
+                switch ($post->post_type) {
+                    case 'audio':
+                        $add('assets/audios', $post->audio);
+                        break;
+                    case 'video':
+                        $add('assets/videos', $post->video);
+                        break;
+                    case 'Trivia Quiz':
+                        foreach ($post->tquizs as $quiz) {
+                            foreach ($quiz->answers as $answer) {
+                                $add('assets/images/quizanswer', $answer->answer_photo);
+                                $answer->delete();
+                            }
+                            $add('assets/images/quiz', $quiz->question_photo);
+                            $quiz->delete();
+                        }
+                        foreach ($post->tresults as $result) {
+                            $add('assets/images/quizresult', $result->result_photo);
+                            $result->delete();
+                        }
+                        break;
+                    case 'Personality Quiz':
+                        foreach ($post->pquizs as $quiz) {
+                            foreach ($quiz->answers as $answer) {
+                                $add('assets/images/panswer', $answer->answer_photo);
+                                $answer->delete();
+                            }
+                            $add('assets/images/pquiz', $quiz->question_photo);
+                            $quiz->delete();
+                        }
+                        foreach ($post->presults as $result) {
+                            $add('assets/images/presult', $result->result_photo);
+                            $result->delete();
+                        }
+                        break;
+                    case 'Sorted List':
+                        foreach ($post->sorts as $sort) {
+                            $add('assets/images/sort', $sort->item_photo);
+                            $sort->delete();
+                        }
+                        break;
                 }
 
-                if($post->presults->count()>0){
-                    foreach($post->presults as $presult){
-                        @unlink('assets/images/presult/'.$presult->result_photo);
-                        $presult->delete();
-                    }
-                }
+                $add('assets/images/post', $post->image_big);
+                $post->delete();
             }
+        });
 
-            if($post->post_type == 'Sorted List'){
-                if($post->sorts->count()>0){
-                    foreach($post->sorts as $sort){
-                        @unlink('assets/images/sort/'.$sort->item_photo);
-                        $sort->delete();
-                    }
-                }
+        foreach ($files as $file) {
+            if (is_file($file)) {
+                @unlink($file);
             }
-
-            @unlink('assets/images/post/'.$post->image_big);
-            $post->delete();
         }
-        return back()->with('success','Data Deleted successfully!');
     }
 }

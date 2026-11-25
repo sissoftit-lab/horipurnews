@@ -13,7 +13,7 @@
                         <a href="{{ route('admin.dashboard') }}">{{ __('Dashboard') }} </a>
                     </li>
                     <li>
-                        <a href="{{ route('slider.index') }}">{{ __('Posts') }}</a>
+                        <a href="{{ route('post.index') }}">{{ __('Posts') }}</a>
                     </li>
                 </ul>
             </div>
@@ -190,17 +190,18 @@ var table;
         ordering: false,
         processing: true,
         serverSide: true,
-        ajax: '{{ route('post.datatables') }}',
+        // start with the selected (default) language so the table loads once, not twice
+        ajax: $('#filter_lang option:selected').data('href') || '{{ route('post.datatables') }}',
         columns: [
-            {data: 'checkbox',name: 'checkbox'},
-            {data: 'image_big',name: 'image_big'},
+            {data: 'checkbox',name: 'checkbox',searchable: false,orderable: false},
+            {data: 'image_big',name: 'image_big',searchable: false,orderable: false},
             {data: 'title',name: 'title'},
-            {data: 'category_id',name: 'category_id'},
-            {data: 'language_id',name: 'language_id'},
+            {data: 'category_id',name: 'category_id',searchable: false},
+            {data: 'language_id',name: 'language_id',searchable: false},
             {data: 'post_type',name: 'post_type'},
-            {data: 'admin_id',name: 'admin_id'},
-            {data: 'is_approve',name: 'is_approve'},
-            {data: 'created_at',name: 'created_at'},
+            {data: 'admin_id',name: 'admin_id',searchable: false},
+            {data: 'is_approve',name: 'is_approve',searchable: false},
+            {data: 'created_at',name: 'created_at',searchable: false},
             {data: 'action',searchable: false,orderable: false}
 
         ],
@@ -209,6 +210,9 @@ var table;
         },
         drawCallback: function (settings) {
             $('.select').niceSelect();
+            // new page of rows: clear selection state
+            $('#headercheck').prop('checked', false);
+            $('.selectPost').hide();
         }
     });
 

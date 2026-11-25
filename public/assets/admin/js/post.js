@@ -1,88 +1,49 @@
 (function($) {
     "use strict";
 
-    $(document).ready(function(){
-        filterLanguage();
+    // Show the bulk-action bar only while at least one row is ticked.
+    function toggleBulkBar() {
+        $('.selectPost').toggle($('.postCheck:checked').length > 0);
+    }
 
+    // Reload the table with the given option's data-href.
+    function reloadTable($option) {
+        table.ajax.url($option.data('href')).load();
+    }
 
-        $("#headercheck").click(function(){
-            if(this.checked){
-                $('.postCheck').each(function(){
-                    $(".postCheck").prop('checked', true);
-                    var checked = $(".postCheck:checked").length;
-                    if(checked > 0){
-                        $('.selectPost').css('display','block');
-                        
-                    }
-                })
-            }else{
-                $('.postCheck').each(function(){
-                    $(".postCheck").prop('checked', false);
-                    $('.selectPost').css('display','none');
-                })
-            }
-        });
-    })
-
-    $(document).on("change","#filter_lang",function(){
-        table.ajax.url( $("#filter_lang option:selected").data('href') ).load();
-        var x = $(this).val();
-        var url = mainurl+'admin/category-filter/language/'+x;
-        $.ajax({
-            type        : 'GET',
-            url         : url,
-            contentType : false,
-            processData : false,
-            data        : {},
-            success     : function(data){
-                $("#category_id").html(data);
-            }
-        });
-    })
-
-    function filterLanguage(){
-        table.ajax.url( $("#filter_lang option:selected").data('href') ).load();
-        var x = $("#filter_lang").val();
-        var url = mainurl+'admin/category-filter/language/'+x;
-        $.ajax({
-            type        : 'GET',
-            url         : url,
-            contentType : false,
-            processData : false,
-            data        : {},
-            success     : function(data){
-                $("#category_id").html(data);
-            }
+    // Fill the category dropdown for the chosen language.
+    function loadCategories(langId) {
+        return $.get(mainurl + 'admin/category-filter/language/' + langId, function(data) {
+            $('#category_id').html(data);
         });
     }
 
-    $(document).on("change","#category_id",function(){
-        table.ajax.url( $("#category_id option:selected").data('href') ).load();
+    $(document).ready(function() {
+        // Table already loads with the default language (see index view); only fetch categories here.
+        loadCategories($('#filter_lang').val());
     });
 
-    $(document).on("change","#filter_user",function(){
-        table.ajax.url( $("#filter_user option:selected").data('href') ).load();
-    })
+    $(document).on('change', '#filter_lang', function() {
+        reloadTable($('#filter_lang option:selected'));
+        loadCategories($(this).val());
+    });
 
+    $(document).on('change', '#category_id', function() {
+        reloadTable($('#category_id option:selected'));
+    });
 
-    $('.postCheck').filter(function () {
-        return $.inArray(this.value, values) >= 0;
-    }).prop('checked', true);
+    $(document).on('change', '#filter_user', function() {
+        reloadTable($('#filter_user option:selected'));
+    });
 
-$(document).on('click','.postCheck',function(){
+    $(document).on('change', '#headercheck', function() {
+        $('.postCheck').prop('checked', this.checked);
+        toggleBulkBar();
+    });
 
-    var checked = $(".postCheck:checked").length;
-    if(checked > 0){
-        $('.selectPost').css('display','block');
-        
-    }else{
-        $('.selectPost').css('display','none');
-    }
-
-});
-
-
-
-
+    $(document).on('change', '.postCheck', function() {
+        $('#headercheck').prop('checked', $('.postCheck').length === $('.postCheck:checked').length);
+        toggleBulkBar();
+    });
 
 })(jQuery);
