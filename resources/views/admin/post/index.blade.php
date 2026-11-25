@@ -22,6 +22,10 @@
 .pp-field>i{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--pp-mute);font-size:13px;pointer-events:none}
 .pp-input,.pp-select{width:100%;height:42px;border:1px solid var(--pp-line);border-radius:11px;background:#fff;padding:0 14px;font-size:13.5px;color:var(--pp-ink);outline:0;transition:border-color .15s,box-shadow .15s;-webkit-appearance:none;appearance:none;display:block}
 .pp-input.has-icon{padding-left:38px}
+.pp-filters .pp-field{min-width:0;height:42px}
+.pp-filters input.pp-input,.pp-filters select.pp-select{height:42px!important;min-height:42px!important;border:1px solid var(--pp-line)!important;border-radius:11px!important;background-color:#fff!important;padding-top:0!important;padding-bottom:0!important;box-sizing:border-box!important;margin:0!important;line-height:normal!important}
+.pp-filters input.pp-input.has-icon{padding-left:38px!important}
+.pp-filters .pp-field>i{top:50%!important;bottom:auto!important;left:13px!important;transform:translateY(-50%)!important;line-height:1!important;margin:0!important}
 .pp-select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='none' stroke='%237a829e' stroke-width='1.8' d='M1 1.5l5 5 5-5'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:34px}
 .pp-input:focus,.pp-select:focus{border-color:var(--pp-brand);box-shadow:0 0 0 4px rgba(91,91,240,.12)}
 .pp-clear{display:none;margin-top:12px;border:0;background:none;color:var(--pp-brand);font-weight:600;font-size:13px;cursor:pointer;padding:0}
