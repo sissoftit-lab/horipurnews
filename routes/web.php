@@ -156,7 +156,8 @@ Route::prefix('admin')->group(function(){
    Route::group(['middleware' => 'permissions:posts'], function () {
 
        //-------------Slider Post Area------------
-        Route::get('/post/datatables','Admin\PostController@datatables')->name('post.datatables');
+        Route::get('/post/list','Admin\PostController@list')->name('post.list');
+        Route::get('/post/categories/{id}','Admin\PostController@categories')->name('post.categories');
         Route::get('/post','Admin\PostController@index')->name('post.index');
         Route::get('/post/edit/{id}','Admin\PostController@edit')->name('post.edit');
         Route::get('/post/view/{id}','Admin\PostController@view')->name('post.view');

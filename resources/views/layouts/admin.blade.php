@@ -50,6 +50,9 @@
 		@endif
 
 		<link href="{{asset('assets/admin/css/admin-modern.css')}}?v=3" rel="stylesheet" />
+		@if(request()->routeIs('article.create','video.create','audio.create','shortlist.create','tquiz.create','pquiz.create','post.edit'))
+		<link href="{{asset('assets/admin/css/post-form.css')}}?v={{ filemtime(public_path('assets/admin/css/post-form.css')) }}" rel="stylesheet" />
+		@endif
 		@yield('styles')
 
 	</head>

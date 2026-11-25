@@ -6,7 +6,7 @@
 
 @section('content')
 
-<div class="content-area">
+<div class="content-area pf">
     <div class="mr-breadcrumb">
         <div class="row">
             <div class="col-lg-12">

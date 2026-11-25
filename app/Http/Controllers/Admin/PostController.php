@@ -8,7 +8,6 @@ use App\Models\Post;
 use App\Models\Category;
 use App\Models\Language;
 use App\Models\Advertisement;
-use Datatables;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
@@ -31,99 +30,94 @@ class PostController extends Controller
 
     public function index(Request $request)
     {
-        return view('admin.post.index');
+        $postTypes = ['article', 'video', 'audio', 'Trivia Quiz', 'Personality Quiz', 'Sorted List', 'rss'];
+
+        return view('admin.post.index', compact('postTypes'));
     }
 
-    public function datatables(Request $request)
+    /**
+     * AJAX list: returns the rendered rows (admin.post._rows) plus paging info and status counts.
+     * Filters: q, lang, category, type, state (approved|pending), from, to, per_page, page.
+     */
+    public function list(Request $request)
     {
         $admin = Auth::guard('admin')->user();
 
-        // Single query builder: paging/search happen in SQL instead of loading every post into memory.
-        $query = Post::query()
-            ->select(self::LIST_COLUMNS)
-            ->with(['category:id,title,slug', 'language:id,language', 'admin:id,name', 'user:id,name'])
+        $base = Post::query()
             ->where('status', 'true')
             ->where('schedule_post', 0)
-            ->whereNull('schedule_post_date')
-            ->orderByDesc('id');
+            ->whereNull('schedule_post_date');
 
         if (!in_array($admin->role->name, ['admin', 'moderator'])) {
-            $query->where('admin_id', $admin->id);
+            $base->where('admin_id', $admin->id);
         }
         if ($request->filled('category')) {
-            $query->where('category_id', $request->input('category'));
+            $base->where('category_id', $request->input('category'));
         } elseif ($request->filled('lang')) {
-            $query->where('language_id', $request->input('lang'));
+            $base->where('language_id', $request->input('lang'));
+        }
+        if ($request->filled('type')) {
+            $base->where('post_type', $request->input('type'));
+        }
+        if ($request->filled('q')) {
+            $term = addcslashes(trim($request->input('q')), '%_' . chr(92));
+            $base->where('title', 'like', '%' . $term . '%');
+        }
+        if ($from = $this->validDate($request->input('from'))) {
+            $base->where('created_at', '>=', $from . ' 00:00:00');
+        }
+        if ($to = $this->validDate($request->input('to'))) {
+            $base->where('created_at', '<=', $to . ' 23:59:59');
         }
 
-        // Optional created_at range (Y-m-d), sent by the daterangepicker.
-        $from = $this->validDate($request->input('from'));
-        $to = $this->validDate($request->input('to'));
-        if ($from) {
-            $query->where('created_at', '>=', $from . ' 00:00:00');
-        }
-        if ($to) {
-            $query->where('created_at', '<=', $to . ' 23:59:59');
+        // Tab counts follow every filter except the status tab itself.
+        $counts = (clone $base)->toBase()
+            ->selectRaw('COUNT(*) as total, COALESCE(SUM(is_pending = 0),0) as approved, COALESCE(SUM(is_pending <> 0),0) as pending')
+            ->first();
+
+        if ($request->input('state') === 'pending') {
+            $base->where('is_pending', '<>', 0);
+        } elseif ($request->input('state') === 'approved') {
+            $base->where('is_pending', 0);
         }
 
-        return Datatables::of($query)
-            ->addColumn('action', function (Post $data) {
-                $links = [];
-                $links[] = '<a href="' . route('frontend.postBySubcategory.details', [$data->category->slug, $data->slug]) . '" target="_blank"> <i class="fa fa-info-circle" aria-hidden="true"></i> View on Frontend</a>';
-                if ($data->post_type != 'rss') {
-                    $links[] = '<a href="' . route('post.edit', $data->id) . '"> <i class="fas fa-edit"></i> Edit</a>';
-                }
-                $links[] = $this->toggleLink('post.sliderChange', $data->id, $data->is_slider != 0, 'Add Into Slider', 'Remove From Slider');
-                $links[] = $this->toggleLink('post.trendingChange', $data->id, $data->is_trending != 0, 'Add Into Breaking', 'Remove Breaking');
-                $links[] = $this->toggleLink('post.feature', $data->id, $data->is_feature != 0, 'Add into Feature', 'Remove Feature');
-                $links[] = $this->toggleLink('post.sliderright', $data->id, $data->slider_right != 0, 'Add into sliderRight', 'Remove sliderRight');
-                $links[] = '<a href="' . route('post.pendingChange', $data->id) . '"><i class="fa fa-file"></i> ' . ($data->is_pending == 0 ? 'Make Post Pending' : 'Make Post Approve') . '</a>';
-                $links[] = '<a href="javascript:;" data-href="' . route('post.delete', $data->id) . '" data-toggle="modal" data-target="#confirm-delete" class="delete"><i class="fas fa-trash-alt"></i> Delete</a>';
+        $perPage = (int) $request->input('per_page', 25);
+        $perPage = in_array($perPage, [10, 25, 50, 100]) ? $perPage : 25;
 
-                return '<div class="godropdown"><button class="go-dropdown-toggle"> Actions<i class="fas fa-chevron-down"></i></button><div class="action-list">' . implode('', $links) . '</div></div>';
-            })
-            ->addColumn('checkbox', function (Post $data) {
-                return '<input type="checkbox" class="form-check-input m-0 p-0 postCheck" value="' . $data->id . '">';
-            })
-            ->editColumn('category_id', function (Post $data) {
-                return $data->category_id ? '<span class="badge badge-primary">' . e($data->category->title) . '</span>' : '';
-            })
-            ->editColumn('language_id', function (Post $data) {
-                return $data->language_id ? '<span class="badge badge-info">' . e($data->language->language) . '</span>' : '';
-            })
-            ->addColumn('is_approve', function (Post $data) {
-                return $data->is_pending != 0
-                    ? '<span class="badge badge-warning text-white">pending</span>'
-                    : '<span class="badge badge-success">approve</span>';
-            })
-            ->editColumn('post_type', function (Post $data) {
-                return $data->post_type ? '<span class="badge badge-secondary">' . e($data->post_type) . '</span>' : '';
-            })
-            ->editColumn('image_big', function (Post $data) {
-                if ($data->post_type == 'rss') {
-                    $src = $data->rss_image ?: url('assets/images/nopic.png');
-                } else {
-                    $src = $data->image_big ? url('assets/images/post/' . $data->image_big) : url('assets/images/nopic.png');
-                }
-                return '<img src="' . e($src) . '" alt="Image" loading="lazy">';
-            })
-            ->editColumn('created_at', function (Post $data) {
-                return $data->created_at->toFormattedDateString();
-            })
-            ->editColumn('admin_id', function (Post $data) {
-                if ($data->admin_id != 0) {
-                    return e($data->admin->name);
-                }
-                return $data->user_id != 0 ? e($data->user->name) : 'User Deleted';
-            })
-            ->rawColumns(['checkbox', 'image_big', 'category_id', 'language_id', 'action', 'is_approve', 'post_type', 'created_at', 'admin_id'])
-            ->toJson();
+        $posts = $base
+            ->select(self::LIST_COLUMNS)
+            ->with(['category:id,title,slug', 'language:id,language', 'admin:id,name', 'user:id,name'])
+            ->orderByDesc('id')
+            ->paginate($perPage);
+
+        return response()->json([
+            'html'      => view('admin.post._rows', compact('posts'))->render(),
+            'total'     => $posts->total(),
+            'from'      => $posts->firstItem() ?? 0,
+            'to'        => $posts->lastItem() ?? 0,
+            'page'      => $posts->currentPage(),
+            'last_page' => $posts->lastPage(),
+            'counts'    => [
+                'all'      => (int) $counts->total,
+                'approved' => (int) $counts->approved,
+                'pending'  => (int) $counts->pending,
+            ],
+        ]);
     }
 
+    /** Top-level categories of a language, as JSON for the filter dropdown. */
+    public function categories($id)
+    {
+        return response()->json(
+            Language::findOrFail($id)->categories()->whereNull('parent_id')->get(['id', 'title'])
+        );
+    }
+
+    /** Legacy HTML <option> list (still used by the user-side post page). */
     public function categoryFilter($id)
     {
         $datas = Language::findOrFail($id)->categories()->whereNull('parent_id')->get(['id', 'title']);
-        $base = route('post.datatables');
+        $base = route('post.list');
 
         $output = '<option data-href="' . $base . '?category=&lang=' . (int) $id . '">All</option>';
         foreach ($datas as $data) {
@@ -131,10 +125,6 @@ class PostController extends Controller
         }
         return $output;
     }
-
-    /* ------------------------------------------------------------------
-     |  Edit / view
-     * ------------------------------------------------------------------ */
 
     public function edit($id)
     {
@@ -233,7 +223,7 @@ class PostController extends Controller
             }
         }
 
-        return back()->with('success', 'Data Deleted successfully!');
+        return $this->respond('Data Deleted successfully!');
     }
 
     /* ------------------------------------------------------------------
@@ -247,9 +237,12 @@ class PostController extends Controller
         return $d && $d->format('Y-m-d') === $value ? $value : null;
     }
 
-    private function toggleLink(string $route, int $id, bool $active, string $addLabel, string $removeLabel): string
+    /** JSON for AJAX callers (the post list page), classic redirect-back for everything else. */
+    private function respond(string $message)
     {
-        return '<a href="' . route($route, $id) . '"><i class="fa fa-' . ($active ? 'minus' : 'plus') . '"></i> ' . ($active ? $removeLabel : $addLabel) . '</a>';
+        return request()->expectsJson()
+            ? response()->json(['message' => $message])
+            : back()->with('success', $message);
     }
 
     private function toggle($id, string $field, string $message)
@@ -257,7 +250,7 @@ class PostController extends Controller
         $post = Post::findOrFail($id);
         $post->update([$field => $post->$field == 1 ? 0 : 1]);
 
-        return back()->with('success', $message);
+        return $this->respond($message);
     }
 
     private function parseIds(Request $request): array
@@ -276,7 +269,7 @@ class PostController extends Controller
             site_cache_bump(); // mass updates fire no model events, so bust the frontend cache manually
         }
 
-        return back()->with('success', 'Data Updated successfully!');
+        return $this->respond('Data Updated successfully!');
     }
 
     /**

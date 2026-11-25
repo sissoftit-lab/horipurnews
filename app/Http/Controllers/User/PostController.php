@@ -99,9 +99,9 @@ class PostController extends Controller
 
     public function categoryFilter($id){
         $datas = Language::find($id)->categories()->where('parent_id',NULL)->get();
-        $output = '<option data-href="'.route('post.datatables').'?category=&lang='.$id.'">All</option>';
+        $output = '<option data-href="'.route('user.post.datatables').'?category=&lang='.$id.'">All</option>';
         foreach($datas as $data){
-            $output .= '<option data-href="'.route('post.datatables').'?category='.$data->id.'">'.$data->title.'</option>';
+            $output .= '<option data-href="'.route('user.post.datatables').'?category='.$data->id.'">'.$data->title.'</option>';
         }
         return $output;
     }

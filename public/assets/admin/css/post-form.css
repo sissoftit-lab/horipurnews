@@ -1,0 +1,119 @@
+/* Premium skin for the post create / edit forms (article, video, audio, sorted list, quizzes).
+   Scoped to .content-area.pf so it never leaks into other admin pages. Markup is unchanged. */
+.content-area.pf{
+  --pf-bg:#f4f6fb;--pf-card:#fff;--pf-ink:#1b2140;--pf-mute:#7a829e;--pf-line:#e6e9f3;
+  --pf-brand:#5b5bf0;--pf-brand-2:#8b5cf6;--pf-brand-soft:#eeeeff;
+  --pf-ok:#12a76b;--pf-warn:#f0a020;--pf-danger:#e5484d;--pf-radius:12px;
+  color:var(--pf-ink);
+}
+
+/* ---------- page heading ---------- */
+.pf .mr-breadcrumb{background:transparent;box-shadow:none;border:0;padding:0 0 10px;margin:0}
+.pf .mr-breadcrumb .heading{font-size:20px;font-weight:700;letter-spacing:-.3px;color:var(--pf-ink);margin:0 0 3px}
+.pf .mr-breadcrumb .links li a{color:var(--pf-mute);font-weight:500;font-size:12px}
+.pf .mr-breadcrumb .links li:last-child a{color:var(--pf-brand);font-weight:600}
+
+/* ---------- cards ---------- */
+.pf .add-product-content{background:var(--pf-card);border:1px solid var(--pf-line);border-radius:var(--pf-radius);
+  box-shadow:0 1px 2px rgba(27,33,64,.04),0 14px 34px -18px rgba(27,33,64,.16);overflow:hidden;margin-bottom:14px}
+.pf .col-lg-4 .row.mt-4{margin-top:0!important}
+.pf .col-lg-4 > .row{margin-bottom:14px}
+.pf .col-lg-4 > .row .add-product-content{margin-bottom:0}
+.pf .add-product-content .product-description .heading-area{padding:10px 16px;border-bottom:1px solid var(--pf-line);background:#fafbfe}
+.pf .add-product-content .product-description .heading-area .title{font-size:14px;font-weight:700;color:var(--pf-ink)}
+.pf .add-product-content .product-description .body-area{padding:16px}
+.pf .add-product-content .product-description .body-area .row{margin-bottom:12px}
+.pf .add-product-content .product-description .body-area .row:last-child{margin-bottom:0}
+.pf .add-product-content .product-description .body-area .left-area{margin-bottom:5px;align-items:baseline;flex-wrap:wrap}
+.pf .add-product-content .product-description .body-area .left-area .heading{font-size:12px;font-weight:700;color:var(--pf-ink);letter-spacing:.1px}
+.pf .add-product-content .product-description .body-area .left-area .sub-heading{font-size:11px;color:var(--pf-mute);margin-left:6px}
+.pf .add-product-content .product-description .body-area p{color:var(--pf-mute);font-size:11.5px;margin-bottom:0}
+
+/* ---------- inputs ---------- */
+.pf .input-field,.pf .form-control,.pf select,.pf .nice-select{
+  border:1px solid var(--pf-line)!important;border-radius:9px!important;background:#fff!important;color:var(--pf-ink)!important;
+  font-size:13px;transition:border-color .15s,box-shadow .15s;box-shadow:none}
+.pf .input-field,.pf .form-control{height:36px!important;padding:0 12px!important}
+.pf textarea.input-field,.pf textarea.form-control{height:84px!important;padding:8px 12px!important;resize:vertical;line-height:1.5}
+.pf select{width:100%;height:36px;padding:0 32px 0 12px;-webkit-appearance:none;appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='none' stroke='%237a829e' stroke-width='1.8' d='M1 1.5l5 5 5-5'/%3E%3C/svg%3E")!important;
+  background-repeat:no-repeat!important;background-position:right 12px center!important}
+.pf .nice-select{height:36px;line-height:34px;width:100%;float:none;padding-left:12px}
+.pf .nice-select .list{border-radius:12px;border:1px solid var(--pf-line);box-shadow:0 18px 40px -12px rgba(27,33,64,.3)}
+.pf .input-field:focus,.pf .form-control:focus,.pf select:focus,.pf .nice-select.open,.pf .nice-select:focus{
+  border-color:var(--pf-brand)!important;box-shadow:0 0 0 4px rgba(91,91,240,.12)!important;outline:0}
+.pf .input-field::placeholder,.pf .form-control::placeholder{color:#a3aac2}
+.pf .input-field.error,.pf .form-control.error{border-color:var(--pf-danger)!important}
+.pf input[type=date].input-field{padding-right:12px!important}
+.pf .input-field.w-60{height:32px!important;width:64px;padding:0 10px!important}
+
+/* ---------- rich editor ---------- */
+.pf .nicEdit-panel{border-radius:11px 11px 0 0!important;background:#fafbfe!important;border:1px solid var(--pf-line)!important;border-bottom:0!important}
+.pf .nicEdit-main{background:#fff!important;border-radius:0 0 11px 11px}
+.pf div.nicEdit-main,.pf .nicEdit-main+*{outline:0}
+.pf .description > div[style*="border"]{border-color:var(--pf-line)!important;border-radius:0 0 11px 11px!important}
+
+/* ---------- tagify ---------- */
+.pf tags.tagify{border:1px solid var(--pf-line);border-radius:11px;padding:4px 8px;min-height:44px;width:100%}
+.pf tags.tagify:hover{border-color:#cdd2e6}
+.pf .tagify--focus{border-color:var(--pf-brand)!important;box-shadow:0 0 0 4px rgba(91,91,240,.12)}
+.pf tag>div{border-radius:8px}
+
+/* ---------- image upload ---------- */
+.pf .img-upload.custom-image-upload #image-preview,.pf .img-upload #image-preview{
+  width:100%;height:150px;border:2px dashed #cfd4ea!important;border-radius:12px;
+  background-color:#fafbff!important;background-size:36px!important;background-position:center 24px!important;
+  background-repeat:no-repeat;transition:border-color .15s,background-color .15s;overflow:hidden}
+.pf .img-upload #image-preview:hover{border-color:var(--pf-brand)!important;background-color:var(--pf-brand-soft)!important}
+.pf .img-upload #image-preview label{width:auto;min-width:110px;padding:0 14px;height:34px;line-height:34px;top:auto;bottom:20px;font-size:12.5px;
+  border-radius:11px;font-weight:600;color:#fff;background:linear-gradient(135deg,var(--pf-brand),var(--pf-brand-2));
+  box-shadow:0 8px 18px -6px rgba(91,91,240,.55);white-space:nowrap}
+.pf .img-upload #image-preview label:hover{background:linear-gradient(135deg,#4a4ae0,#7a49ec);color:#fff}
+.pf .img-upload #image-preview input{top:auto;bottom:20px;height:34px}
+.pf .img-upload .text{color:var(--pf-mute);font-size:11px;margin-top:6px}
+.pf .set-gallery{display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:9px;font-weight:600;font-size:12px;
+  background:var(--pf-brand-soft);color:var(--pf-brand)!important;text-decoration:none!important;transition:background .15s}
+.pf .set-gallery:hover{background:#e0e0ff}
+
+/* ---------- Yes / No radios as segmented pills ---------- */
+.pf .custom-control.custom-radio.d-inline-block{padding:0;margin:0 4px 0 0!important}
+.pf .custom-control.custom-radio .custom-control-input{position:absolute;opacity:0;z-index:-1}
+.pf .custom-control.custom-radio .custom-control-label{display:inline-block;padding:4px 13px;border:1px solid var(--pf-line);border-radius:30px;
+  background:#fff;color:var(--pf-mute);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;user-select:none;margin:0}
+.pf .custom-control.custom-radio .custom-control-label::before,
+.pf .custom-control.custom-radio .custom-control-label::after{display:none}
+.pf .custom-control.custom-radio .custom-control-label:hover{border-color:#cdd2e6;color:var(--pf-ink)}
+.pf .custom-control.custom-radio .custom-control-input:checked~.custom-control-label{
+  background:var(--pf-brand);border-color:var(--pf-brand);color:#fff;box-shadow:0 6px 14px -6px rgba(91,91,240,.65)}
+.pf .custom-control.custom-radio .custom-control-input:focus-visible~.custom-control-label{box-shadow:0 0 0 4px rgba(91,91,240,.2)}
+
+/* checkboxes (schedule etc.) */
+.pf input[type=checkbox].schedule{width:16px;height:16px;accent-color:var(--pf-brand);cursor:pointer}
+
+/* ---------- buttons ---------- */
+.pf .btn{border-radius:9px;font-weight:600;font-size:12.5px;padding:7px 14px;border:0;transition:transform .15s,box-shadow .15s,filter .15s}
+.pf .btn:hover{transform:translateY(-1px);filter:brightness(1.05)}
+.pf .btn:focus{box-shadow:0 0 0 4px rgba(91,91,240,.2)}
+.pf .btn-success,.pf .addPost{background:linear-gradient(135deg,var(--pf-brand),var(--pf-brand-2))!important;color:#fff!important;
+  box-shadow:0 10px 22px -8px rgba(91,91,240,.65)}
+.pf .btn-warning,.pf .saveAsDraft{background:#fff4de!important;color:#a96a00!important;margin-right:6px}
+.pf .btn-primary{background:var(--pf-brand);color:#fff}
+.pf .btn-info{background:var(--pf-brand-soft);color:var(--pf-brand);box-shadow:none}
+.pf .btn-info:hover{color:var(--pf-brand)}
+.pf .btn-danger{background:#fdecec;color:var(--pf-danger)}
+.pf .btn.bg-light{background:#fafbfe!important;border:1px solid var(--pf-line);color:var(--pf-ink);border-radius:12px}
+.pf input[type=submit].btn{min-width:110px;cursor:pointer}
+
+/* ---------- repeatable blocks (quiz questions, list items, answers) ---------- */
+.pf .single-answer .close{box-shadow:0 4px 12px rgba(27,33,64,.18);color:var(--pf-danger);top:-6px;right:-6px}
+.pf .tab-pane,.pf .nav-tabs{border-color:var(--pf-line)}
+.pf .nav-tabs .nav-link.active{color:var(--pf-brand);border-color:var(--pf-line) var(--pf-line) #fff}
+
+/* ---------- ad picker ---------- */
+.pf #toggleAdSelect{background:var(--pf-brand-soft);color:var(--pf-brand);box-shadow:none}
+.pf #adSelectContainer{background:#fff;border:1px solid var(--pf-line);border-radius:10px;padding:12px}
+
+/* ---------- misc ---------- */
+.pf .alert{border-radius:12px;border:0}
+.pf hr{border-color:var(--pf-line)}
+@media(max-width:991px){.pf .add-product-content .product-description .body-area{padding:12px}}
