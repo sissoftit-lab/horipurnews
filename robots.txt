@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+
+User-agent: FacebookExternalHit
+Allow: /
+
+Sitemap: https://livenews.asia/sitemap.xml

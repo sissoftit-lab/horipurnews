@@ -1,0 +1,58 @@
+/* Modern + compact frontend overrides (loaded last). Remove this file to revert. */
+:root{--hp-radius:8px;--hp-shadow:0 1px 3px rgba(0,0,0,.08),0 2px 8px rgba(0,0,0,.06);--hp-accent:#b42024}
+body{font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;background:#f6f7f9}
+
+/* Header: compact */
+.main-top-header{padding:3px 0;background:#161a1f}
+.main-top-header .top-header-content{display:flex;justify-content:space-between;align-items:center}
+.main-top-header ul.list,.main-top-header .right-content .list{margin:0;padding:0;display:flex;align-items:center;list-style:none;gap:8px}
+.main-top-header a,.main-top-header .log-reg{font-size:12px}
+.main-top-header .user-profile img{width:24px;height:24px;border-radius:50%;object-fit:cover}
+.main-top-header select{font-size:12px;padding:1px 4px;border-radius:4px}
+.logo-header{padding:4px 0}
+.logo-img{height:34px!important;width:auto!important;max-width:220px;object-fit:contain}
+.logo-header .add-banner img{max-height:50px;width:auto}
+
+/* Menu */
+.mainmenu-area{box-shadow:0 2px 6px rgba(0,0,0,.08)!important;background:#fff}
+.mainmenu-area .navbar #main_menu .navbar-nav .nav-link{padding:9px 8px;line-height:20px;font-size:12.5px;letter-spacing:.2px}
+.mainmenu-area .navbar #main_menu .navbar-nav .nav-item .dropdown-menu{border:0;border-radius:0 0 var(--hp-radius) var(--hp-radius);box-shadow:var(--hp-shadow)}
+
+/* Section headings */
+.header-area{margin-bottom:12px;border-bottom:1px solid rgba(0,0,0,.1)}
+.header-area .title{font-size:15px;padding:4px 0;letter-spacing:.2px}
+.header-area .title::before{background:var(--hp-accent);height:3px;border-radius:2px}
+.header-area .view-all{font-size:12px;top:3px;text-decoration:none;font-weight:600}
+
+/* Cards */
+.single-news{border-left-width:1px;border-right-width:1px;border-bottom-width:2px;border-radius:var(--hp-radius);box-shadow:var(--hp-shadow);transition:transform .2s,box-shadow .2s}
+.single-news:hover{transform:translateY(-2px);box-shadow:0 4px 14px rgba(0,0,0,.15)}
+.single-news .content-wrapper .inner-content{padding:14px 12px 8px}
+.single-news .content-wrapper .inner-content .title{font-size:13.5px;line-height:1.35;margin-bottom:2px}
+.single-news .content-wrapper img,.single-box img{border-radius:var(--hp-radius)}
+.single-box{margin-bottom:10px}
+.post-meta li{font-size:11.5px}
+.tag,.single-news .content-wrapper .tag{border-radius:4px;font-size:10.5px;padding:1px 6px}
+
+/* Layout density */
+section,.home-front-area{padding-top:0}
+.row{--gutter:0}
+.mycol{padding-left:8px;padding-right:8px;margin-bottom:10px}
+.btn{border-radius:6px;padding:4px 12px;font-size:13px}
+.form-control{border-radius:6px;height:auto;padding:6px 10px}
+.tags-widget .tag-list a{border-radius:20px;padding:2px 10px;font-size:12px}
+.widget,.sidebar-widget{margin-bottom:16px}
+
+/* Footer: compact */
+.footer{padding:24px 0 0;margin-top:14px}
+.footer .footer-widget .title{font-size:15px;margin-bottom:10px}
+.footer .footer-widget ul li{margin-bottom:4px}
+.footer .footer-widget ul li a{font-size:13px}
+.footer .copy-bg{padding:8px 0}
+.bottomtotop{border-radius:50%;box-shadow:var(--hp-shadow)}
+
+@media (max-width:768px){
+  .logo-img{max-width:170px}
+  .mycol{padding-left:6px;padding-right:6px}
+  .header-area .title{font-size:14px}
+}
