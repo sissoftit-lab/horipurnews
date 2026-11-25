@@ -165,7 +165,7 @@
                                     </span>
                                 @endif
                             @else
-                                    <img src="{{asset('assets/images/nopic.png')}}" alt="{{$slider_rights_first->alt_tag}}">
+                                    <img loading="lazy" decoding="async" src="{{asset('assets/images/nopic.png')}}" alt="{{$slider_rights_first->alt_tag}}">
                             @endif
                             <div class="inner-content">
                                 <span>
@@ -224,7 +224,7 @@
                                     <img data-src="{{$slider_rights_second->rss_image}}" alt="{{$slider_rights_second->alt_tag}}" class="lazy">
                                 @endif
                             @else
-                                    <img src="{{asset('assets/images/nopic.png')}}" alt="">
+                                    <img loading="lazy" decoding="async" src="{{asset('assets/images/nopic.png')}}" alt="">
                             @endif
                             <div class="inner-content">
                                 <span>
@@ -333,7 +333,7 @@
                                                                                         </span>
                                                                                     @endif
                                                                                 @else
-                                                                                    <img src="{{asset('assets/images/nopic.png')}}" alt="">
+                                                                                    <img loading="lazy" decoding="async" src="{{asset('assets/images/nopic.png')}}" alt="">
                                                                                 @endif
                                                                             </div>
                                                                             <div class="inner-content">
@@ -396,7 +396,7 @@
                                                                                     </span>
                                                                                 @endif
                                                                             @else
-                                                                                <img src="{{asset('assets/images/nopic.png')}}" alt="">
+                                                                                <img loading="lazy" decoding="async" src="{{asset('assets/images/nopic.png')}}" alt="">
                                                                             @endif
                                                                         </div>
                                                                         <div class="content">
@@ -496,7 +496,7 @@
                                                             @elseif ($post->rss_image)
                                                                 <img data-src="{{ $post->rss_image }}" alt="{{$post->alt_tag}}" class="lazy">
                                                             @else
-                                                                <img src="{{ asset('assets/images/nopic.png') }}" alt="{{$post->alt_tag}}">
+                                                                <img loading="lazy" decoding="async" src="{{ asset('assets/images/nopic.png') }}" alt="{{$post->alt_tag}}">
                                                             @endif
                     
                                                             @if ($post->post_type == 'audio')
@@ -543,7 +543,7 @@
                                                         @elseif ($post->rss_image)
                                                             <img data-src="{{$post->rss_image}}" alt="{{$post->alt_tag}}" class="lazy">
                                                         @else
-                                                            <img src="{{asset('assets/images/nopic.png')}}" alt="">
+                                                            <img loading="lazy" decoding="async" src="{{asset('assets/images/nopic.png')}}" alt="">
                                                         @endif
                                 
                                                         @if ($post->post_type == 'audio')
@@ -579,7 +579,7 @@
                                                 <a href="{{ route('frontend.productDetails2', [$post->category->slug??'cat',$post->id]) }}">
                                                     <div class="d-flex align-items-start mt-2 ps-0">
                                                         <div class="me-2 flex-shrink-0" style="width: 100px;">
-                                                            <img class="img-fluid" src="{{ $post->image_big ? asset('assets/images/post/'.$post->image_big) : ($post->rss_image ?? asset('assets/images/nopic.png')) }}" alt="{{$post->alt_tag}}">
+                                                            <img loading="lazy" decoding="async" class="img-fluid" src="{{ $post->image_big ? asset('assets/images/post/'.$post->image_big) : ($post->rss_image ?? asset('assets/images/nopic.png')) }}" alt="{{$post->alt_tag}}">
                                                         </div>
                                                         <div class="text-content mx-2">
                                                             <p class="mb-1" style="font-size: 12px; font-weight: 600;">
@@ -599,7 +599,7 @@
                                     @if(isset($sponsor_index[$sponsorIndex]))
                                         <div class="col-md-12 mycol my-3">
                                             <a href="{{ $sponsor_index[$sponsorIndex]->link ?? '#' }}" target="_blank">
-                                                <img src="{{ asset('assets/images/addBanner/' . $sponsor_index[$sponsorIndex]->photo) }}" alt="Sponsor Banner" class="img-fluid lazy" style="width: 100%; height: auto;">
+                                                <img loading="lazy" decoding="async" src="{{ asset('assets/images/addBanner/' . $sponsor_index[$sponsorIndex]->photo) }}" alt="Sponsor Banner" class="img-fluid lazy" style="width: 100%; height: auto;">
                                             </a>
                                         </div>
                                         
@@ -664,7 +664,7 @@
                                                         @endif
 
                                                     @else
-                                                        <img src="{{asset('assets/images/nopic.png')}}" alt="">
+                                                        <img loading="lazy" decoding="async" src="{{asset('assets/images/nopic.png')}}" alt="">
                                                     @endif
                                                 </div>
                                                 <div class="content">
@@ -729,7 +729,7 @@
                                                         @endif
 
                                                     @else
-                                                        <img src="{{asset('assets/images/nopic.png')}}" alt="">
+                                                        <img loading="lazy" decoding="async" src="{{asset('assets/images/nopic.png')}}" alt="">
                                                     @endif
                                                 </div>
                                                 <div class="content">
@@ -794,7 +794,7 @@
                                                             </div>
                                                         @else
                                                             <div class="img">
-                                                                <img src="{{asset('assets/images/nopic.png')}}" alt="">
+                                                                <img loading="lazy" decoding="async" src="{{asset('assets/images/nopic.png')}}" alt="">
                                                             </div>
                                                         @endif
                                                         <div class="content">
@@ -1038,11 +1038,11 @@
                                     <!-- First post full width image -->
                                     <a href="{{ route('frontend.productDetails2', [$post->category->slug??'cat',$post->id]) }}" class="d-block mb-3  text-decoration-none text-dark">
                                         @if ($post->image_big)
-                                            <img src="{{ asset('assets/images/post/' . $post->image_big) }}" alt="{{$post->alt_tag}}" class="img-fluid rounded w-100">
+                                            <img loading="lazy" decoding="async" src="{{ asset('assets/images/post/' . $post->image_big) }}" alt="{{$post->alt_tag}}" class="img-fluid rounded w-100">
                                         @elseif ($post->rss_image)
-                                            <img src="{{ $post->rss_image }}" alt="{{$post->alt_tag}}" class="img-fluid rounded w-100">
+                                            <img loading="lazy" decoding="async" src="{{ $post->rss_image }}" alt="{{$post->alt_tag}}" class="img-fluid rounded w-100">
                                         @else
-                                            <img src="{{ asset('assets/images/nopic.png') }}" alt="" class="img-fluid rounded w-100">
+                                            <img loading="lazy" decoding="async" src="{{ asset('assets/images/nopic.png') }}" alt="" class="img-fluid rounded w-100">
                                         @endif
         
                                         <p class="mt-2 mb-1" style="font-size: 12px; font-weight: 600;">
@@ -1057,11 +1057,11 @@
                                     <a href="{{ route('frontend.productDetails2', [$post->category->slug??'cat',$post->id]) }}" class="d-flex align-items-start mb-3  text-decoration-none text-dark">
                                         <div style="width: 100px; flex-shrink: 0;">
                                             @if ($post->image_big)
-                                                <img src="{{ asset('assets/images/post/' . $post->image_big) }}" alt="{{$post->alt_tag}}" class="img-fluid rounded">
+                                                <img loading="lazy" decoding="async" src="{{ asset('assets/images/post/' . $post->image_big) }}" alt="{{$post->alt_tag}}" class="img-fluid rounded">
                                             @elseif ($post->rss_image)
-                                                <img src="{{ $post->rss_image }}" alt="{{$post->alt_tag}}" class="img-fluid rounded">
+                                                <img loading="lazy" decoding="async" src="{{ $post->rss_image }}" alt="{{$post->alt_tag}}" class="img-fluid rounded">
                                             @else
-                                                <img src="{{ asset('assets/images/nopic.png') }}" alt="" class="img-fluid rounded">
+                                                <img loading="lazy" decoding="async" src="{{ asset('assets/images/nopic.png') }}" alt="" class="img-fluid rounded">
                                             @endif
                                         </div>
                                         <div class="ps-3 flex-grow-1 mx-2">
@@ -1125,7 +1125,7 @@
                                                     @elseif ($post->rss_image)
                                                         <img data-src="{{ $post->rss_image }}" alt="{{$post->alt_tag}}" class="lazy">
                                                     @else
-                                                        <img src="{{ asset('assets/images/nopic.png') }}" alt="">
+                                                        <img loading="lazy" decoding="async" src="{{ asset('assets/images/nopic.png') }}" alt="">
                                                     @endif
         
                                                     @if ($post->post_type == 'audio')
@@ -1178,7 +1178,7 @@
         <!--                        <li>-->
         <!--                            <a href="{{asset('assets/videos/'.$video_small->video)}}" data-embed="{{ $video_small->embed_video }}" class="">-->
         <!--                                <div class="left">-->
-        <!--                                    <img src="{{asset('assets/images/post/'.$video_small->image_big)}}" alt="">-->
+        <!--                                    <img loading="lazy" decoding="async" src="{{asset('assets/images/post/'.$video_small->image_big)}}" alt="">-->
         <!--                                </div>-->
         <!--                                <div class="right">-->
         <!--                                    <h4 class="title">-->
@@ -1307,13 +1307,13 @@
                 
                                         @if ($post->image_big || $post->rss_image)
                                             @if ($post->image_big)
-                                                <img src="{{ asset('assets/images/post/'.$post->image_big) }}" alt="{{$post->alt_tag}}" class="img-fluid">
+                                                <img loading="lazy" decoding="async" src="{{ asset('assets/images/post/'.$post->image_big) }}" alt="{{$post->alt_tag}}" class="img-fluid">
                                             @endif
                                             @if ($post->rss_image)
-                                                <img src="{{ $post->rss_image }}" alt="{{$post->alt_tag}}" class="img-fluid">
+                                                <img loading="lazy" decoding="async" src="{{ $post->rss_image }}" alt="{{$post->alt_tag}}" class="img-fluid">
                                             @endif
                                         @else
-                                            <img src="{{ asset('assets/images/nopic.png') }}" alt="" class="img-fluid">
+                                            <img loading="lazy" decoding="async" src="{{ asset('assets/images/nopic.png') }}" alt="" class="img-fluid">
                                         @endif
                 
                                         <div class="inner-content p-3">
@@ -1467,7 +1467,7 @@
             <div class="col-lg-12 text-center">
                 @if($sponsor_footer)
                     <a href="{{ $sponsor_footer->link ?? '#' }}" target="_blank">
-                        <img src="{{ asset('assets/images/addBanner/' . $sponsor_footer->photo) }}" alt="Advertisement" class="img-fluid lazy" style="width: 100%; height: auto;">
+                        <img loading="lazy" decoding="async" src="{{ asset('assets/images/addBanner/' . $sponsor_footer->photo) }}" alt="Advertisement" class="img-fluid lazy" style="width: 100%; height: auto;">
                     </a>
                 @endif
             </div>

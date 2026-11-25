@@ -49,7 +49,7 @@
 		<link href="{{asset('assets/admin/css/common.css')}}" rel="stylesheet" />
 		@endif
 
-		<link href="{{asset('assets/admin/css/admin-modern.css')}}?v=2" rel="stylesheet" />
+		<link href="{{asset('assets/admin/css/admin-modern.css')}}?v=3" rel="stylesheet" />
 		@yield('styles')
 
 	</head>

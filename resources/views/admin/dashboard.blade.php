@@ -1,209 +1,142 @@
 @extends('layouts.admin')
 
 @section('content')
-<div class="content-area">
-    <div class="row row-cards-one">
-        <div class="col-md-12 col-lg-6 col-xl-4">
-            <div class="mycard bg1">
-                <div class="left">
-                    <h5 class="title">{{ __('Post') }} </h5>
-                    @php
-                        $user = Auth::guard('admin')->user()->role;
-                    @endphp
-                    @if ($user->name != 'admin' && $user->name != 'moderator')
-                        <span class="number">{{ $author_post }}</span>
-                    @else 
-                        <span class="number">{{ $total_post }}</span>
-                    @endif
-                    <a href="{{ route('post.index') }}" class="link">{{ __('View All') }}</a>
-                </div>
-                <div class="right d-flex align-self-center">
-                    <div class="icon">
-                        <i class="fab fa-blogger-b"></i>
-                    </div>
-                </div>
-            </div>
+@php
+    $admin   = Auth::guard('admin')->user();
+    $isStaff = !in_array($admin->role->name, ['admin', 'moderator']);
+    $isOwner = $admin->whereId(1)->exists();
+
+    $stats = [
+        ['label' => __('Post'),          'value' => $isStaff ? $author_post : $total_post,         'icon' => 'fas fa-newspaper',      'tone' => 'indigo', 'route' => 'post.index'],
+        ['label' => __('Pending Post'),  'value' => $isStaff ? $author_pending : $pending_posts,   'icon' => 'fas fa-hourglass-half', 'tone' => 'amber',  'route' => 'pending.index'],
+        ['label' => __('Draft'),         'value' => $drafts,                                       'icon' => 'fas fa-pen-nib',        'tone' => 'slate',  'route' => 'draft.index'],
+        ['label' => __('Schedule Post'), 'value' => $schedules,                                    'icon' => 'fas fa-clock',          'tone' => 'sky',    'route' => 'schedule.index'],
+        ['label' => __('Rss Feeds'),     'value' => $rss,                                          'icon' => 'fas fa-rss',            'tone' => 'rose',   'route' => 'rss.index'],
+        ['label' => __('Polls'),         'value' => $polls,                                        'icon' => 'fas fa-poll',           'tone' => 'emerald','route' => 'addPolls.index'],
+    ];
+@endphp
+
+<div class="content-area dash">
+
+    {{-- Greeting --}}
+    <div class="dash-hero">
+        <div>
+            <h4 class="dash-hero-title">{{ __('Welcome back') }}, {{ $admin->name ?? __('Admin') }}</h4>
+            <p class="dash-hero-sub">{{ __("Here's what's happening with your newsroom today.") }}</p>
         </div>
-        <div class="col-md-12 col-lg-6 col-xl-4">
-            <div class="mycard bg2">
-                <div class="left">
-                    <h5 class="title">{{ __('Pending Post') }}</h5>
-                    @if ($user->name != 'admin' && $user->name != 'moderator')
-                        <span class="number">{{ $author_pending }}</span>
-                    @else 
-                        <span class="number">{{ $pending_posts }}</span>
-                    @endif
-                    <a href="{{ route('pending.index') }}" class="link">{{ __('View All') }}</a>
-                </div>
-                <div class="right d-flex align-self-center">
-                    <div class="icon">
-                        <i class="fas fa-hourglass"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-12 col-lg-6 col-xl-4">
-            <div class="mycard bg3">
-                <div class="left">
-                    <h5 class="title">{{ __('Draft') }}</h5>
-                    <span class="number">{{ $drafts }}</span>
-                    <a href="{{ route('draft.index') }}" class="link">{{ __('View All') }}</a>
-                </div>
-                <div class="right d-flex align-self-center">
-                    <div class="icon">
-                        <i class="fas fa-pen-square"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-12 col-lg-6 col-xl-4">
-            <div class="mycard bg4">
-                <div class="left">
-                    <h5 class="title">{{ __('Schedule Post') }}</h5>
-                    <span class="number">{{ $schedules }}</span>
-                    <a href="{{ route('schedule.index') }}" class="link">{{ __('View All') }}</a>
-                </div>
-                <div class="right d-flex align-self-center">
-                    <div class="icon">
-                        <i class="fas fa-clock"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-12 col-lg-6 col-xl-4">
-            <div class="mycard bg5">
-                <div class="left">
-                    <h5 class="title">{{ __('Rss Feeds') }}</h5>
-                    <span class="number">{{ $rss}}</span>
-                    <a href="{{ route('rss.index') }}" class="link">{{ __('View All') }}</a>
-                </div>
-                <div class="right d-flex align-self-center">
-                    <div class="icon">
-                        <i class="fas fa-rss"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-12 col-lg-6 col-xl-4">
-            <div class="mycard bg6">
-                <div class="left">
-                    <h5 class="title">{{ __('Polls') }}</h5>
-                    <span class="number">{{ $polls}}</span>
-                    <a href="{{ route('addPolls.index') }}" class="link">{{ __('View All') }}</a>
-                </div>
-                <div class="right d-flex align-self-center">
-                    <div class="icon">
-                        <i class="fas fa-poll"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <div class="dash-hero-date"><i class="far fa-calendar-alt"></i> {{ now()->format('D, d M Y') }}</div>
     </div>
 
-    @if (auth()->guard('admin')->user()->whereId(1)->exists())
-        
-    <div class="row row-cards-one">
-        <div class="col-md-6 col-xl-3">
-            <div class="card c-info-box-area">
-                <div class="c-info-box box1">
-                    <p>{{ App\Models\Admin::where('id','!=',1)->where( 'created_at', '>', Carbon\Carbon::now()->subDays(30))->get()->count()  }}</p>
-                </div>
-                <div class="c-info-box-content">
-                    <h6 class="title">{{ __('New Users') }}</h6>
-                    <p class="text">{{ __('Last 30 Days') }}</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-6 col-xl-3">
-            <div class="card c-info-box-area">
-                <div class="c-info-box box2">
-                    <p>{{ App\Models\Admin::where('id','!=',1)->count() }}</p>
-                </div>
-                <div class="c-info-box-content">
-                    <h6 class="title">{{ __('Total Users') }}</h6>
-                    <p class="text">{{ __('All Time') }}</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-6 col-xl-3">
-            <div class="card c-info-box-area">
-                <div class="c-info-box box3">
-                    <p>{{ App\Models\Subscriber::get()->count()  }}</p>
-                </div>
-                <div class="c-info-box-content">
-                    <h6 class="title">{{ __('Total Subscribers') }}</h6>
-                    <p class="text">{{ __('All Time') }}</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-6 col-xl-3">
-            <div class="card c-info-box-area">
-                <div class="c-info-box box4">
-                     <p>{{ App\Models\Font::get()->count() }}</p>
-                </div>
-                <div class="c-info-box-content">
-                    <h6 class="title">{{ __('Total Fonts') }}</h6>
-                    <p class="text">{{ __('All Time') }}</p>
-                </div>
-            </div>
-        </div>
+    {{-- Primary stats --}}
+    <div class="dash-grid dash-grid-6">
+        @foreach ($stats as $s)
+            <a href="{{ route($s['route']) }}" class="dash-stat tone-{{ $s['tone'] }}">
+                <span class="dash-stat-icon"><i class="{{ $s['icon'] }}"></i></span>
+                <span class="dash-stat-body">
+                    <span class="dash-stat-label">{{ $s['label'] }}</span>
+                    <span class="dash-stat-value">{{ number_format($s['value']) }}</span>
+                </span>
+                <i class="fas fa-arrow-right dash-stat-go"></i>
+            </a>
+        @endforeach
     </div>
 
-    <div class="row row-cards-one">
-        <div class="col-md-6 col-lg-6 col-xl-6">
-            <div class="card">
-                <h5 class="card-header">{{ __('Recent User(s)') }}</h5>
-                <div class="card-body">
-                    <div class="my-table-responsiv">
-                        <table class="table table-hover dt-responsive" cellspacing="0" width="100%">
-                            <thead>
-                                <tr>
-                                    <th>{{ __('Email') }}</th>
-                                    <th>{{ __('Joined') }}</th>
-                                </tr>
-                                @foreach($userRole as $role)
-                                    @foreach ($role->users()->orderBy('id','desc')->take(10)->get() as $data)
-                                        <tr>
-                                            <td>{{ $data->email }}</td>
-                                            <td>{{ $data->created_at }}</td>
-                                        </tr>
-                                    @endforeach
-                                @endforeach
-                            </thead>
-                        </table>
+    @if ($isOwner)
+        @php
+            $newUsers   = App\Models\Admin::where('id', '!=', 1)->where('created_at', '>', Carbon\Carbon::now()->subDays(30))->count();
+            $totalUsers = App\Models\Admin::where('id', '!=', 1)->count();
+            $totalSubs  = App\Models\Subscriber::count();
+            $totalFonts = App\Models\Font::count();
+            $mini = [
+                ['label' => __('New Users'),         'sub' => __('Last 30 Days'), 'value' => $newUsers,   'icon' => 'fas fa-user-plus',  'tone' => 'indigo'],
+                ['label' => __('Total Users'),       'sub' => __('All Time'),     'value' => $totalUsers, 'icon' => 'fas fa-users',      'tone' => 'sky'],
+                ['label' => __('Total Subscribers'), 'sub' => __('All Time'),     'value' => $totalSubs,  'icon' => 'fas fa-envelope',   'tone' => 'emerald'],
+                ['label' => __('Total Fonts'),       'sub' => __('All Time'),     'value' => $totalFonts, 'icon' => 'fas fa-font',       'tone' => 'amber'],
+            ];
+        @endphp
+
+        {{-- Secondary stats --}}
+        <div class="dash-grid dash-grid-4">
+            @foreach ($mini as $m)
+                <div class="dash-mini tone-{{ $m['tone'] }}">
+                    <span class="dash-mini-icon"><i class="{{ $m['icon'] }}"></i></span>
+                    <div class="dash-mini-body">
+                        <span class="dash-mini-label">{{ $m['label'] }}</span>
+                        <span class="dash-mini-sub">{{ $m['sub'] }}</span>
                     </div>
+                    <span class="dash-mini-value">{{ number_format($m['value']) }}</span>
                 </div>
-            </div>
+            @endforeach
         </div>
 
-        <div class="col-md-6 col-lg-6 col-xl-6">
-            <div class="card">
-                <h5 class="card-header">{{ __('Subscribers') }}</h5>
-                <div class="card-body">
-                    <div class="my-table-responsiv">
-                        <table class="table table-hover dt-responsive" cellspacing="0" width="100%">
-                            <thead>
-                                <tr>
-                                    <th>{{ __("#Sl") }}</th>
-                                    <th>{{ __("Email") }}</th>
-                                </tr>
-                                @foreach($subscribers as $data)
+        {{-- Tables --}}
+        <div class="dash-grid dash-grid-2">
+            <div class="dash-panel">
+                <div class="dash-panel-head">
+                    <h5><i class="fas fa-user-clock"></i> {{ __('Recent User(s)') }}</h5>
+                </div>
+                <div class="dash-panel-body">
+                    <table class="dash-table">
+                        <thead>
+                            <tr>
+                                <th>{{ __('Email') }}</th>
+                                <th class="text-right">{{ __('Joined') }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @php $hasUsers = false; @endphp
+                            @foreach ($userRole as $role)
+                                @foreach ($role->users()->orderBy('id', 'desc')->take(10)->get() as $data)
+                                    @php $hasUsers = true; @endphp
                                     <tr>
-                                        <td>{{ $data->id }}</td>
-                                        <td>{{ $data->email }}</td>
+                                        <td>
+                                            <span class="dash-avatar">{{ strtoupper(substr($data->email, 0, 1)) }}</span>
+                                            <span class="dash-email">{{ $data->email }}</span>
+                                        </td>
+                                        <td class="text-right dash-muted">{{ optional($data->created_at)->format('d M Y') }}</td>
                                     </tr>
                                 @endforeach
-                            </thead>
-                        </table>
-                    </div>
+                            @endforeach
+                            @unless ($hasUsers)
+                                <tr><td colspan="2" class="dash-empty">{{ __('No users yet') }}</td></tr>
+                            @endunless
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="dash-panel">
+                <div class="dash-panel-head">
+                    <h5><i class="fas fa-envelope-open-text"></i> {{ __('Subscribers') }}</h5>
+                </div>
+                <div class="dash-panel-body">
+                    <table class="dash-table">
+                        <thead>
+                            <tr>
+                                <th style="width:60px">{{ __('#Sl') }}</th>
+                                <th>{{ __('Email') }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse ($subscribers as $data)
+                                <tr>
+                                    <td class="dash-muted">{{ $data->id }}</td>
+                                    <td>
+                                        <span class="dash-avatar">{{ strtoupper(substr($data->email, 0, 1)) }}</span>
+                                        <span class="dash-email">{{ $data->email }}</span>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr><td colspan="2" class="dash-empty">{{ __('No subscribers yet') }}</td></tr>
+                            @endforelse
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
-    </div>
     @endif
 
 </div>
-
 @endsection
 
 @section('scripts')
