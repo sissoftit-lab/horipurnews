@@ -541,6 +541,7 @@ Route::prefix('admin')->group(function(){
 
     Route::get('/logout','Admin\DashboardController@logout')->name('admin.logout');
     Route::get('/dashboard','Admin\DashboardController@index')->name('admin.dashboard');
+    Route::get('/dashboard/data','Admin\DashboardController@data')->name('admin.dashboard.data');
 
     Route::get('/profile', 'Admin\DashboardController@profile')->name('admin.profile');
     Route::post('/profile', 'Admin\DashboardController@profileUpdate')->name('admin.profile.update');

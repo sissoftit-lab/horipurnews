@@ -2,8 +2,11 @@
 
 namespace App\Http\Controllers\Admin;
 
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use App\Models\Admin;
+use App\Models\Font;
 use App\Models\Category;
 use App\Models\Language;
 use App\Models\PollQuestion;
@@ -25,20 +28,47 @@ class DashboardController extends Controller
     }
     
     public function index(){
-        $default_language = Language::where('is_default',1)->first();
-        $data['total_post'] = Post::all()->count();
-        $data['author_post'] = Auth::guard('admin')->user()->posts->count();
-        $data['pending_posts'] = Post::all()->where('is_pending','=',1)->where('status','=','true')->count();
-        $data['author_pending'] = Auth::guard('admin')->user()->posts()->where('is_pending','=',1)->where('status','=','true')->count();
-        $data['drafts'] = Auth::guard('admin')->user()->posts()->where('status','=','draft')->count();
-        $data['schedules'] = Auth::guard('admin')->user()->posts()->where('status','=','true')->where('schedule_post','=',1)->where('is_pending','=',0)->count();
-        $data['rss'] = Rss::all()->count();
-        $data['polls'] = PollQuestion::all()->count();
-        $data['userRole'] = Role::where('id','!=',1)->get();
-        $data['subscribers'] = Subscriber::orderBy('id','desc')->orderBy('id','desc')->take(10)->get();
-        $data['categories'] = Category::where('language_id','=',$default_language->id);
+        return view('admin.dashboard');
+    }
 
-        return view('admin.dashboard',$data);
+    // AJAX endpoint: returns dashboard statistics as JSON
+    public function data(){
+        $admin   = Auth::guard('admin')->user();
+        $isStaff = !in_array($admin->role->name, ['admin', 'moderator']);
+        $isOwner = $admin->id == 1;
+
+        $data = [
+            'post'     => $isStaff ? $admin->posts()->count() : Post::count(),
+            'pending'  => $isStaff
+                ? $admin->posts()->where('is_pending',1)->where('status','true')->count()
+                : Post::where('is_pending',1)->where('status','true')->count(),
+            'draft'    => $admin->posts()->where('status','draft')->count(),
+            'schedule' => $admin->posts()->where('status','true')->where('schedule_post',1)->where('is_pending',0)->count(),
+            'rss'      => Rss::count(),
+            'polls'    => PollQuestion::count(),
+            'is_owner' => $isOwner,
+        ];
+
+        if ($isOwner) {
+            $data['new_users']   = Admin::where('id','!=',1)->where('created_at','>',Carbon::now()->subDays(30))->count();
+            $data['total_users'] = Admin::where('id','!=',1)->count();
+            $data['total_subs']  = Subscriber::count();
+            $data['total_fonts'] = Font::count();
+
+            $data['recent_users'] = [];
+            foreach (Role::where('id','!=',1)->get() as $role) {
+                foreach ($role->users()->orderBy('id','desc')->take(10)->get() as $u) {
+                    $data['recent_users'][] = [
+                        'email'  => $u->email,
+                        'joined' => optional($u->created_at)->format('d M Y'),
+                    ];
+                }
+            }
+
+            $data['subscribers'] = Subscriber::orderBy('id','desc')->take(10)->get(['id','email']);
+        }
+
+        return response()->json($data);
     }
 
     public function profile()
