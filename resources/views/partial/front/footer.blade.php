@@ -35,9 +35,9 @@
                             
                             @if (empty($gs->footer_logo) && empty($gs->logo) && !empty($header_footer_logo[0]->footer_logo))
                                 <img src="{{$header_footer_logo[0]->footer_logo ? asset('assets/images/logo/'.$header_footer_logo[0]->footer_logo) : asset('assets/front/images/logo.png')}}" 
-                                width="300" alt="{{ $gs->site_name ?: $gs->title }}"  >
+                                class="logo-img" alt="{{ $gs->site_name ?: $gs->title }}"  >
                             @else
-                                <img src="{{asset('assets/images/logo/'.($gs->footer_logo ?: $gs->logo))}}" width="300" alt="{{ $gs->site_name ?: $gs->title }}">
+                                <img src="{{asset('assets/images/logo/'.($gs->footer_logo ?: $gs->logo))}}" class="logo-img" alt="{{ $gs->site_name ?: $gs->title }}">
                             @endif
                         </a>
                     </div>
