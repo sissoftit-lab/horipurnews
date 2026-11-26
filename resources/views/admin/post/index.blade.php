@@ -3,7 +3,8 @@
 @section('styles')
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-daterangepicker/3.1/daterangepicker.min.css">
 <style>
-.pp{--pp-bg:#f4f6fb;--pp-card:#fff;--pp-ink:#1b2140;--pp-mute:#7a829e;--pp-line:#e8ebf4;--pp-brand:#5b5bf0;--pp-brand-2:#8b5cf6;--pp-brand-soft:#eeeeff;--pp-ok:#12a76b;--pp-ok-soft:#e3f8ef;--pp-warn:#d98a06;--pp-warn-soft:#fff3d9;--pp-danger:#e5484d;--pp-danger-soft:#fdecec;--pp-radius:12px;padding:14px;color:var(--pp-ink)}
+.pp,.pp-modal,.pp-toast-box{--pp-bg:#f4f6fb;--pp-card:#fff;--pp-ink:#1b2140;--pp-mute:#7a829e;--pp-line:#e8ebf4;--pp-brand:#5b5bf0;--pp-brand-2:#8b5cf6;--pp-brand-soft:#eeeeff;--pp-ok:#12a76b;--pp-ok-soft:#e3f8ef;--pp-warn:#d98a06;--pp-warn-soft:#fff3d9;--pp-danger:#e5484d;--pp-danger-soft:#fdecec;--pp-radius:12px}
+.pp{padding:14px;color:var(--pp-ink)}
 .pp *{box-sizing:border-box}
 .pp-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px}
 .pp-head h2{font-size:19px;font-weight:700;margin:0;letter-spacing:-.4px}
