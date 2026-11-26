@@ -21,33 +21,34 @@
 				<div class="row">
 					<div class="col-lg-12 align-self-center">
 						<div class="top-header-content">
+							@php
+								$isBangla = preg_match('/[\x{0980}-\x{09FF}]/u', (string) front_language()->language);
+								$today = \Carbon\Carbon::now()->locale($isBangla ? 'bn' : 'en')->translatedFormat('l, d F Y');
+								if ($isBangla) {
+									$today = strtr($today, ['0'=>'০','1'=>'১','2'=>'২','3'=>'৩','4'=>'৪','5'=>'৫','6'=>'৬','7'=>'৭','8'=>'৮','9'=>'৯']);
+								}
+							@endphp
 							<div class="left-content">
-								<ul class="list">
-									@foreach ($social_links as $social_link)
-									<li>
-										<a href="{{ $social_link->link}}" class="{{$social_link->name}}">
-											<i class="{{$social_link->icon}}"></i>
-										</a>
-									</li>
-									@endforeach
-								</ul>
+								<span class="top-date"><i class="far fa-calendar-alt"></i>{{ $today }}</span>
 							</div>
 							<div class="right-content">
-								<div class="list">
+								<ul class="list top-social">
+									@foreach ($social_links as $social_link)
+										<li>
+											<a href="{{ $social_link->link}}" class="{{$social_link->name}}" title="{{$social_link->name}}" aria-label="{{$social_link->name}}">
+												<i class="{{$social_link->icon}}"></i>
+											</a>
+										</li>
+									@endforeach
+								</ul>
+								<ul class="list top-account">
 									@if (!auth()->user())
 										<li class="log-reg">
-										<a href="{{ route('front.LogReg') }}">{{__('Login')}}</a>
-											<span>
-												/
-											</span>
-											<a href="{{ route('front.LogReg') }}">{{__('Register')}}</a>
+											<a class="top-login" href="{{ route('front.LogReg') }}"><i class="far fa-user"></i>{{__('Login')}}</a>
+											<a class="top-register" href="{{ route('front.LogReg') }}">{{__('Register')}}</a>
 										</li>
-									@endif
-
-									@if (auth()->user())
-									     @php
-											 $data = auth()->user();
-										 @endphp
+									@else
+										@php $data = auth()->user(); @endphp
 										<li class="user-profile">
 											<div class="nav-item dropdown">
 												<a class="dropdown-toggle" href="#" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -60,14 +61,15 @@
 											</div>
 										</li>
 									@endif
-									<li>
-										<select id="languageChange">
+									<li class="top-lang">
+										<i class="fas fa-globe"></i>
+										<select id="languageChange" aria-label="Language">
 											@foreach ($languages as $language)
-													<option value="{{$language->id}}" {{ Session::has('language') ? ( Session::get('language') == $language->id ? 'selected' : '' ) : (front_language()->id == $language->id ? 'selected' : '') }}>{{$language->language}}</option>
-												@endforeach
+												<option value="{{$language->id}}" {{ Session::has('language') ? ( Session::get('language') == $language->id ? 'selected' : '' ) : (front_language()->id == $language->id ? 'selected' : '') }}>{{$language->language}}</option>
+											@endforeach
 										</select>
 									</li>
-								</div>
+								</ul>
 							</div>
 						</div>
 					</div>
