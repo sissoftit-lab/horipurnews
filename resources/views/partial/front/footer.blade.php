@@ -70,7 +70,7 @@
                         {{__('CATEGORIES')}}
                     </h4>
                     <ul class="link-list">
-                        @foreach ($default_language->categories()->inRandomOrder()->get() as $category)  
+                        @foreach (footer_categories($default_language->id)->shuffle() as $category)  
                             <li>
                                 <a href="{{ route('frontend.category',$category->slug)}}">
                                     <span>
@@ -154,7 +154,7 @@
                         <div class="content footerMenu">
                             <ul class="nav">
                                 @php
-                                    $footer_menus = \App\Models\Page::where('placement','footer')->where('status',1)->get();
+                                    $footer_menus = footer_pages();
                                 @endphp
                                 @foreach ($footer_menus as $menu)
                                     <li class="nav-item">

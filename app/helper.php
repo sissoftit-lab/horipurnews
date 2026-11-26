@@ -7,51 +7,38 @@ if (!function_exists('slug_create') ) {
     }
 }
 
+if(!function_exists('active_ads')){
+    /** Active advertisements, optionally for a placement and size, from cache. */
+    function active_ads(?string $placement = null, ?string $size = null){
+        $ads = news_cache()->remember('ads:active', ['ads'], 'ads', fn () => App\Models\Advertisement::where('status', 1)->get());
+
+        return $ads->when($placement, fn ($c) => $c->where('add_placement', $placement))
+            ->when($size, fn ($c) => $c->where('addSize', $size))
+            ->values();
+    }
+}
+
 if(!function_exists('advertisement')){
     function advertisement(){
-        $index_bottom = App\Models\Advertisement::inRandomOrder()
-                                        ->where('add_placement','index_bottom')
-                                        ->where('addSize','size_728')
-                                        ->where('status',1)
-                                        ->first(); 
-        return $index_bottom;
+        return active_ads('index_bottom', 'size_728')->shuffle()->first();
     }
 }
 
 if(!function_exists('sidebar_banner')){
     function sidebar_banner(){
-        $sidebar_banner = App\Models\Advertisement::inRandomOrder()
-                                        ->where('add_placement','sidebar_bottom')
-                                        ->where('addSize','size_468')
-                                        ->where('status',1)
-                                        ->first(); 
-        return $sidebar_banner;
+        return active_ads('sidebar_bottom', 'size_468')->shuffle()->first();
     }
 }
 
 if(!function_exists('sponsor_banner')){
     function sponsor_banner(){
-        $sponsor_banners     = App\Models\Advertisement::inRandomOrder()
-                                        ->where('add_placement','sponsor')
-                                        ->where('addSize','size_468')
-                                        ->where('status',1)
-                                        ->take(2)
-                                        ->get();
-        return $sponsor_banners;
+        return active_ads('sponsor', 'size_468')->shuffle()->take(2)->values();
     }
 }
 
 if(!function_exists('header_ads')){
-
     function header_ads(){
-        $header_ads   = App\Models\Advertisement::inRandomOrder()
-                                ->where('add_placement','header')
-                                ->where('addSize','size_728')
-                                ->where('status',1)
-                                ->inRandomOrder()
-                                ->limit(1)
-                                ->first(); 
-        return $header_ads;
+        return active_ads('header', 'size_728')->shuffle()->first();
     }
 }
 
@@ -63,8 +50,7 @@ if (! function_exists('convertUtf8')) {
 
 if(!function_exists('d_logo')){
     function d_logo($lid){
-        $header_footer_logo = App\Models\Language::find($lid)->logos;
-        return $header_footer_logo;
+        return news_cache()->remember("logos:$lid", [], 'settings', fn () => App\Models\Logo::where('language_id', $lid)->get());
     }
 }
 
@@ -74,67 +60,85 @@ if(!function_exists('d_logo')){
 |--------------------------------------------------------------------------
 | Frontend cache helpers
 |--------------------------------------------------------------------------
-| site_cache() keys include a version number that is bumped whenever a content
-| model is saved/deleted (see AppServiceProvider), so admin edits show up
-| immediately without needing cache tags (the file driver has none).
+| Thin wrappers around App\Services\NewsCacheService, which handles keys,
+| lifetimes and invalidation.
 */
-if (! function_exists('site_cache_version')) {
-    function site_cache_version() {
-        return \Illuminate\Support\Facades\Cache::rememberForever('site_cache_version', fn () => time());
-    }
-}
-
-if (! function_exists('site_cache_bump')) {
-    function site_cache_bump() {
-        \Illuminate\Support\Facades\Cache::forever('site_cache_version', microtime(true));
-    }
-}
-
-if (! function_exists('site_cache')) {
-    function site_cache(string $key, $ttl, \Closure $callback) {
-        return \Illuminate\Support\Facades\Cache::remember('site:'.site_cache_version().':'.$key, $ttl, $callback);
+if (! function_exists('news_cache')) {
+    function news_cache(): \App\Services\NewsCacheService {
+        return app(\App\Services\NewsCacheService::class);
     }
 }
 
 if (! function_exists('front_language')) {
-    /** Current frontend language (session choice or default), resolved once per request. */
+    /** Current frontend language (session choice or default). */
     function front_language() {
-        static $lang = false;
-        if ($lang === false) {
-            $lang = null;
-            if (session()->has('language')) {
-                $id = session('language');
-                $lang = site_cache('language:'.$id, 3600, fn () => \App\Models\Language::find($id));
-            }
-            if (!$lang) {
-                $lang = site_cache('language:default', 3600, fn () => \App\Models\Language::where('is_default', 1)->first());
-            }
+        $lang = null;
+        if (session()->has('language')) {
+            $id = (int) session('language');
+            $lang = news_cache()->remember("language:$id", [], 'settings', fn () => \App\Models\Language::find($id));
         }
-        return $lang;
+
+        return $lang ?: news_cache()->remember('language:default', [], 'settings', fn () => \App\Models\Language::where('is_default', 1)->first());
+    }
+}
+
+if (! function_exists('public_settings')) {
+    /** General settings without credentials, safe to cache and share with frontend views. */
+    function public_settings() {
+        return news_cache()->remember('settings:general', [], 'settings', function () {
+            $gs = \App\Models\GeneralSettings::find(1);
+
+            return $gs?->setRawAttributes(\Illuminate\Support\Arr::except($gs->getAttributes(), ['smtp_user', 'smtp_pass', 'captcha_secret_key']), true);
+        });
+    }
+}
+
+if (! function_exists('seo_settings')) {
+    function seo_settings() {
+        return news_cache()->remember('settings:seo', [], 'settings', fn () => \Illuminate\Support\Facades\DB::table('seotools')->first());
+    }
+}
+
+if (! function_exists('widget_settings')) {
+    function widget_settings() {
+        return news_cache()->remember('settings:widgets', [], 'settings', fn () => \App\Models\WidgetSetiings::find(1));
+    }
+}
+
+if (! function_exists('category_by_slug')) {
+    function category_by_slug($slug) {
+        return news_cache()->remember('category:slug:'.md5($slug), [], 'category', fn () => \App\Models\Category::where('slug', $slug)->first());
     }
 }
 
 if (! function_exists('published_posts_query')) {
     function published_posts_query() {
-        return \App\Models\Post::where('status', true)->where('is_pending', 0)->where('schedule_post', 0);
+        return \App\Models\Post::published();
+    }
+}
+
+if (! function_exists('post_card_relations')) {
+    /** Relations the post cards read. Only public author columns, so nothing private is cached. */
+    function post_card_relations() {
+        return ['category', 'admin:id,name,photo', 'user:id,name'];
     }
 }
 
 if (! function_exists('cat_recent_posts')) {
-    /** Latest published posts of a (parent) category, newest first. Cached; category relation preloaded. */
+    /** Latest published posts of a (parent) category, newest first. */
     function cat_recent_posts($categoryId, int $limit = 6) {
-        return site_cache("cat_posts:$categoryId:$limit", 300, function () use ($categoryId, $limit) {
-            return published_posts_query()->where('category_id', $categoryId)->with('category')
+        return news_cache()->remember("cat:$categoryId:recent:$limit", ["cat:$categoryId"], 'category', function () use ($categoryId, $limit) {
+            return published_posts_query()->where('category_id', $categoryId)->with(post_card_relations())
                 ->orderBy('id', 'desc')->limit($limit)->get();
         });
     }
 }
 
 if (! function_exists('subcat_recent_posts')) {
-    /** Latest published posts of a subcategory, newest first. Cached; category relation preloaded. */
+    /** Latest published posts of a subcategory, newest first. */
     function subcat_recent_posts($subcategoryId, int $limit = 4) {
-        return site_cache("subcat_posts:$subcategoryId:$limit", 300, function () use ($subcategoryId, $limit) {
-            return published_posts_query()->where('subcategories_id', $subcategoryId)->with('category')
+        return news_cache()->remember("subcat:$subcategoryId:recent:$limit", ["cat:$subcategoryId"], 'category', function () use ($subcategoryId, $limit) {
+            return published_posts_query()->where('subcategories_id', $subcategoryId)->with(post_card_relations())
                 ->orderBy('id', 'desc')->limit($limit)->get();
         });
     }
@@ -142,17 +146,19 @@ if (! function_exists('subcat_recent_posts')) {
 
 if (! function_exists('cat_post_count')) {
     function cat_post_count($categoryId) {
-        return site_cache("cat_count:$categoryId", 300, fn () => published_posts_query()->where('category_id', $categoryId)->count());
+        return news_cache()->remember("cat:$categoryId:count", ["cat:$categoryId"], 'category', fn () => published_posts_query()->where('category_id', $categoryId)->count());
     }
 }
 
 if (! function_exists('top_view_posts')) {
-    /** Posts for the "most viewed" widgets, in rank order, for the current language. Cached. */
+    /** Posts for the "most viewed" widgets, in rank order, for the current language. */
     function top_view_posts($topViews) {
         $lid = front_language()->id ?? 0;
-        return site_cache('top_posts:'.$lid.':'.md5(json_encode($topViews)), 900, function () use ($topViews, $lid) {
-            $ids = collect($topViews)->pluck('post_id')->all();
-            $posts = \App\Models\Post::whereIn('id', $ids)->where('language_id', $lid)->with('category')->get()->keyBy('id');
+        $ids = collect($topViews)->pluck('post_id')->all();
+
+        return news_cache()->remember("popular:posts:$lid:".md5(implode(',', $ids)), ['content'], 'popular', function () use ($ids, $lid) {
+            $posts = published_posts_query()->whereIn('id', $ids)->where('language_id', $lid)->with(post_card_relations())->get()->keyBy('id');
+
             return collect($ids)->map(fn ($id) => $posts->get($id))->filter()->values();
         });
     }
@@ -160,6 +166,12 @@ if (! function_exists('top_view_posts')) {
 
 if (! function_exists('footer_pages')) {
     function footer_pages() {
-        return site_cache('footer_pages', 3600, fn () => \App\Models\Page::where('placement', 'footer')->where('status', 1)->get());
+        return news_cache()->remember('pages:footer', [], 'page', fn () => \App\Models\Page::where('placement', 'footer')->where('status', 1)->get());
+    }
+}
+
+if (! function_exists('footer_categories')) {
+    function footer_categories($languageId) {
+        return news_cache()->remember("categories:all:$languageId", [], 'menu', fn () => \App\Models\Category::where('language_id', $languageId)->get());
     }
 }

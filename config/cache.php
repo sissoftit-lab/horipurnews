@@ -18,7 +18,7 @@ return [
     |
     */
 
-    'default' => env('CACHE_DRIVER', 'file'),
+    'default' => env('CACHE_STORE', env('CACHE_DRIVER', 'file')),
 
     /*
     |--------------------------------------------------------------------------
@@ -51,6 +51,18 @@ return [
         'file' => [
             'driver' => 'file',
             'path' => storage_path('framework/cache/data'),
+        ],
+
+        // Redis, falling back to the file cache while Redis is unreachable.
+        'failover' => [
+            'driver' => 'failover',
+            'stores' => ['redis', 'file'],
+        ],
+
+        // News cache version numbers (see config/news_cache.php).
+        'news_versions' => [
+            'driver' => 'file',
+            'path' => storage_path('framework/cache/news-versions'),
         ],
 
         'memcached' => [

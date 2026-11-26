@@ -7,7 +7,6 @@ use App\Http\Controllers\Controller;
 use App\Models\Admin;
 use App\Models\Advertisement;
 use App\Models\Category;
-use App\Models\GeneralSettings;
 use App\Models\ImageAlbum;
 use App\Models\Language;
 use App\Models\Page;
@@ -17,9 +16,8 @@ use App\Models\Rss;
 use App\Models\SocialLink;
 use App\Models\View;
 use App\Models\Widget;
-use App\Models\WidgetSetiings;
 use Carbon\Carbon;
-use DB;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
 use InvalidArgumentException;
 use Markury\MarkuryPost;
@@ -33,16 +31,13 @@ class FrontendController extends Controller
     }
     
     public function sitemap(){
-        $xml = \Illuminate\Support\Facades\Cache::remember('sitemap_xml_v1', 3600, function () {
-            return $this->buildSitemap();
-        });
+        $xml = news_cache()->rememberLocked('sitemap', ['content'], 'sitemap', fn () => $this->buildSitemap());
         return response($xml, 200)->header('Content-Type', 'application/xml');
     }
 
     private function buildSitemap(){
-        $posts = Post::where('status','=','true')
-                                    ->where('schedule_post','=',0)
-                                    ->where('schedule_post_date','=',NULL)
+        $posts = Post::published()
+                                    ->whereNull('schedule_post_date')
                                     ->orderBy('id','desc')
                                     ->select('id', 'updated_at')
                                     ->get();
@@ -87,27 +82,12 @@ class FrontendController extends Controller
 
     public function index(){
 
-        $default_language = front_language();
-        $lid = $default_language->id;
+        $lid = front_language()->id;
 
-        // Everything content-related is cached for 5 minutes (and invalidated instantly when
-        // posts/categories/widgets/etc. are saved in the admin). Only per-request randomness
-        // (ads) and per-visitor state stay outside the cache.
-        $data = site_cache('home:'.$lid, 300, function () use ($lid) {
-            $published = function () use ($lid) {
-                return Post::where('status', true)->where('is_pending', 0)
-                    ->where('schedule_post', 0)->where('language_id', $lid)->with('category');
-            };
+        $published = fn () => Post::published()->where('language_id', $lid)->with(post_card_relations());
 
-            $sliders = $published()->where('is_slider', 1)->orderBy('id', 'desc')->get();
-            $slider_lefts = $published()->where('slider_left', 1)->orderBy('created_at', 'desc')->take(2)->get();
-            $slider_rights = $published()->where('slider_right', 1)->orderBy('id', 'desc')->take(4)->get();
-
-            $home_page_posts = Category::with('child')
-                ->where('show_at_homepage', 1)->whereNull('parent_id')->where('language_id', $lid)
-                ->orderBy('category_order', 'asc')->get();
-
-            $is_recents = $published()->orderBy('id', 'desc')->take(8)->get();
+        // Breaking / trending ticker: shortest lifetime.
+        $breaking = news_cache()->remember("home:breaking:$lid", ['content'], 'breaking', function () use ($published) {
             $is_trendings = $published()->where('is_trending', 1)->orderBy('id', 'desc')->take(30)->get();
 
             $is_breaking = '';
@@ -116,52 +96,54 @@ class FrontendController extends Controller
                 $is_breaking .= '<span>&#9758;</span> <a href="'.$url.'">'.e($is_trending->title).'</a> &nbsp;&nbsp;&nbsp;';
             }
 
-            $more_news = $published()->orderBy('id', 'desc')->take(8)->get();
-            $is_features = $published()->where('is_feature', 1)->orderBy('id', 'desc')->take(8)->get();
+            return compact('is_trendings', 'is_breaking');
+        });
 
-            $video = fn () => $published()->where('post_type', 'video')->where('is_videoGallery', 1)->orderBy('id', 'desc');
-            $video_large = $video()->first();
-            $video_smalls = $video()->skip(1)->take(5)->get();
+        // Sliders, featured, latest and videos.
+        $news = news_cache()->rememberLocked("home:news:$lid", ['content'], 'home', function () use ($published) {
+            $slider_rights = $published()->where('slider_right', 1)->orderBy('id', 'desc')->take(4)->get();
+            $latest = $published()->orderBy('id', 'desc')->take(8)->get();
+            $videos = $published()->where('post_type', 'video')->where('is_videoGallery', 1)->orderBy('id', 'desc')->take(6)->get();
 
             return [
-                'sliders'              => $sliders,
-                'slider_lefts'         => $slider_lefts,
-                'slider_rights_firsts' => $slider_rights->take(2)->values(),
-                'slider_rights_seconds'=> $slider_rights->slice(2, 2)->values(),
-                'home_page_posts'      => $home_page_posts,
-                'is_features'          => $is_features,
-                'is_recents'           => $is_recents,
-                'is_trendings'         => $is_trendings,
-                'is_breaking'          => $is_breaking,
-                'more_news'            => $more_news,
-                'last_id'              => $more_news->isNotEmpty() ? $more_news->last()->id : 0,
-                'video_large'          => $video_large,
-                'video_smalls'         => $video_smalls,
-                'polls'                => PollQuestion::where('status', '1')->where('language_id', $lid)->orderBy('id', 'desc')->get(),
-                'ws'                   => WidgetSetiings::find(1),
-                'widgets'              => Widget::where('status', 1)->where('language_id', $lid)->orderBy('id', 'desc')->get(),
-                'image_albums'         => ImageAlbum::where('language_id', $lid)->orderBy('id', 'desc')->get(),
+                'sliders'               => $published()->where('is_slider', 1)->orderBy('id', 'desc')->get(),
+                'slider_lefts'          => $published()->where('slider_left', 1)->orderBy('created_at', 'desc')->take(2)->get(),
+                'slider_rights_firsts'  => $slider_rights->take(2)->values(),
+                'slider_rights_seconds' => $slider_rights->slice(2, 2)->values(),
+                'is_features'           => $published()->where('is_feature', 1)->orderBy('id', 'desc')->take(8)->get(),
+                'is_recents'            => $latest,
+                'more_news'             => $latest,
+                'last_id'               => $latest->isNotEmpty() ? $latest->last()->id : 0,
+                'video_large'           => $videos->first(),
+                'video_smalls'          => $videos->slice(1)->values(),
             ];
         });
 
-        // Ads: the rows are cached briefly (click counters change them often, so they are not
-        // tied to the content version) and the random pick happens per request in PHP,
-        // which avoids ORDER BY RAND() on every page view.
-        $ads = \Illuminate\Support\Facades\Cache::remember('home_ads_v1', 300, function () {
-            return Advertisement::where('status', 1)
-                ->whereIn('add_placement', ['sponsor', 'index_bottom', 'home_footer'])->get();
+        // Category blocks and sidebar: change only through the admin.
+        $blocks = news_cache()->remember("home:blocks:$lid", [], 'menu', function () use ($lid) {
+            return [
+                'home_page_posts' => Category::with('child')
+                    ->where('show_at_homepage', 1)->whereNull('parent_id')->where('language_id', $lid)
+                    ->orderBy('category_order', 'asc')->get(),
+                'polls'           => PollQuestion::with('child')->where('status', '1')->where('language_id', $lid)->orderBy('id', 'desc')->get(),
+                'widgets'         => Widget::where('status', 1)->where('language_id', $lid)->orderBy('id', 'desc')->get(),
+                'image_albums'    => ImageAlbum::with('categories')->where('language_id', $lid)->orderBy('id', 'desc')->get(),
+            ];
         });
-        $data['sponsor_banners'] = $ads->where('add_placement', 'sponsor')->where('addSize', 'size_468')->shuffle()->take(2)->values();
-        $data['sponsor_index']   = $ads->where('add_placement', 'index_bottom')->shuffle()->values();
-        $data['sponsor_footer']  = $ads->where('add_placement', 'home_footer')->sortByDesc('id')->first();
 
-        $data['seoMeta']   = app(\App\Services\Tracking\SeoMetaService::class)
-            ->home($data['gs'] ?? GeneralSettings::find(1), DB::table('seotools')->first());
+        $data = $breaking + $news + $blocks;
+        $data['ws'] = widget_settings();
+
+        // Ads are picked randomly per request from the cached rows.
+        $data['sponsor_banners'] = sponsor_banner();
+        $data['sponsor_index']   = active_ads('index_bottom')->shuffle()->values();
+        $data['sponsor_footer']  = active_ads('home_footer')->sortByDesc('id')->first();
+
+        $data['seoMeta']   = app(\App\Services\Tracking\SeoMetaService::class)->home(public_settings(), seo_settings());
         $data['trackPage'] = 'home';
 
         return view('frontend.index', $data);
     }
-
     // public function loadMore(Request $request){
     //     if(session()->has('language')){
     //         $default_language = Language::find(session()->get('language'));
@@ -313,21 +295,17 @@ class FrontendController extends Controller
 
     public function category($slug){
 
-        $data = Category::where('slug',$slug)->first();
+        $data = category_by_slug($slug);
         if($data){
-            $posts = $data->posts()
-                      ->where('schedule_post','=',0)
-                      ->where('is_pending',0)
-                      ->where('status',true)
-                      ->with('category')
-                      ->orderBy('id','desc')
-                      ->paginate(9);
+            $posts = news_cache()->paginate("cat:{$data->id}:list", ["cat:{$data->id}"], 'category', fn () => Post::published()
+                      ->where('category_id', $data->id)
+                      ->with(post_card_relations())
+                      ->orderBy('id','desc'), 9);
 
             return view('frontend.category',compact('data','posts'));
         }
         return response()->view('errors.404', [], 404);
     }
-
     /**
      * Records a page view after the response has been sent (no INSERT/SELECT on the request path),
      * and ignores crawlers so they don't inflate the `views` table.
@@ -353,16 +331,45 @@ class FrontendController extends Controller
         });
     }
 
-    /** Shared renderer for every URL form of a single post. */
-    private function renderPost(Request $request, $data)
+    /**
+     * A post for public display. Only published posts are cached; unpublished ones are
+     * returned (uncached) to a logged-in admin or the post's own author, as a preview.
+     */
+    private function findPost($id): ?Post
     {
-        $this->recordView($request, $data->id);
+        if (! ctype_digit((string) $id)) {
+            return null;
+        }
+        $id = (int) $id;
+        $relations = ['category', 'admin:id,name,photo', 'user:id,name', 'galleries'];
+
+        $post = news_cache()->remember("post:$id", ["post:$id"], 'post', fn () => Post::published()->with($relations)->find($id));
+        if ($post) {
+            return $post;
+        }
+
+        $post = Post::with($relations)->find($id);
+        $canPreview = $post && (Auth::guard('admin')->check()
+            || ($post->user_id && Auth::guard('web')->id() == $post->user_id));
+
+        return $canPreview ? $post : null;
+    }
+
+    /** Shared renderer for every URL form of a single post. */
+    private function renderPost(Request $request, ?Post $data)
+    {
+        if (! $data) {
+            return response()->view('errors.404', [], 404);
+        }
+
+        if ($data->isPublished()) {
+            $this->recordView($request, $data->id);
+        }
 
         // SEO meta + tracking params, shared with every post view type below.
-        $data->loadMissing('admin');
         view()->share([
             'seoMeta'     => app(\App\Services\Tracking\SeoMetaService::class)
-                ->post($data, GeneralSettings::find(1), DB::table('seotools')->first()),
+                ->post($data, public_settings(), seo_settings()),
             'trackPage'   => 'post',
             'trackParams' => [
                 'content_name' => mb_substr($data->title, 0, 150),
@@ -371,22 +378,19 @@ class FrontendController extends Controller
             ],
         ]);
 
+        $ws = widget_settings();
+
         if($data->post_type == 'Trivia Quiz'){
-            $ws = WidgetSetiings::find(1);
             return view('frontend.quiz',compact('data','ws'));
         }elseif($data->post_type == 'Sorted List'){
-            $ws = WidgetSetiings::find(1);
             return view('frontend.sort',compact('data','ws'));
         }elseif($data->post_type == 'Personality Quiz'){
-            $ws = WidgetSetiings::find(1);
             return view('frontend.personality',compact('data','ws'));
         }
 
-        $ws = WidgetSetiings::find(1);
         $advertisement = $data->is_ad_option
-            ? Advertisement::where('id', $data->is_ad_option)->where('status', 1)->first()
+            ? active_ads()->firstWhere('id', $data->is_ad_option)
             : null;
-        $data->loadMissing(['category', 'admin', 'galleries']);
         $meta_image=asset('assets/images/post/'.$data->image_big);
 
         return view('frontend.details',compact('data','ws','meta_image','advertisement'));
@@ -394,83 +398,78 @@ class FrontendController extends Controller
 
     public function details(Request $request,$category,$slug){
 
-        $sub = Category::where('slug',$slug)->first();
+        $sub = category_by_slug($slug);
 
         if($sub && isset($sub->title)){
-            $default_language = front_language();
+            $lid = front_language()->id;
 
-            $data['parent'] = Category::where('slug',$category)->first();
+            $data['parent'] = category_by_slug($category);
             $data['subcategory'] = $sub->title;
-            $data['datas'] = $sub->subcategoryPosts()
-                            ->where('status',true)
-                            ->where('schedule_post',0)
-                            ->where('language_id','=',$default_language->id)
-                            ->with('category')
+            $data['datas'] = news_cache()->remember("subcat:{$sub->id}:list:$lid", ["cat:{$sub->id}"], 'category', fn () => Post::published()
+                            ->where('subcategories_id', $sub->id)
+                            ->where('language_id', $lid)
+                            ->with(post_card_relations())
                             ->orderBy('id','desc')
                             ->limit(60)
-                            ->get();
+                            ->get());
 
             return view('frontend.postBySubcategory',$data);
         }
 
-        $data = Post::where('slug',$slug)->first();
-        if($data){
-            return $this->renderPost($request, $data);
-        }
-        return response()->view('errors.404', [], 404);
+        // slug -> id is versioned by "content", so renamed and deleted posts drop out immediately.
+        $id = news_cache()->remember('post:slug:'.md5($slug), ['content'], 'post', fn () => Post::where('slug',$slug)->value('id'));
+
+        return $this->renderPost($request, $id ? $this->findPost($id) : null);
     }
 
     public function productDetails2(Request $request,$category, $id){
-        $data = Post::where('id',$id)->first();
-        if(!$data){
-            return response()->view('errors.404', [], 404);
-        }
-        return $this->renderPost($request, $data);
+        return $this->renderPost($request, $this->findPost($id));
     }
 
     public function productDetails(Request $request, $id){
-        $data = Post::where('id',$id)->first();
-        if(!$data){
-            return response()->view('errors.404', [], 404);
-        }
-        return $this->renderPost($request, $data);
+        return $this->renderPost($request, $this->findPost($id));
     }
 
     public function searchByTag($s){
-        $default_language = front_language();
+        $lid = front_language()->id;
         $s = mb_substr(trim($s), 0, 100);
-        $datas  = Post::where('tags','LIKE','%'.addcslashes($s, '%_\\').'%')->where('is_pending',0)
-                        ->where('status',true)
-                        ->where('schedule_post',0)
-                        ->where('language_id','=',$default_language->id)
-                        ->with('category')
+
+        // Only tags that match something are stored, so random URLs do not fill the cache.
+        $datas = news_cache()->remember("tag:$lid:".md5(mb_strtolower($s)), ['content'], 'tag', function () use ($s, $lid) {
+            $found = Post::published()
+                        ->where('tags','LIKE','%'.addcslashes($s, '%_\\').'%')
+                        ->where('language_id', $lid)
+                        ->with(post_card_relations())
                         ->orderBy('id','desc')
                         ->limit(100)
                         ->get();
+
+            return $found->isEmpty() ? null : $found;
+        }) ?? (new Post)->newCollection();
         $tag    = $s;
         return view('frontend.postByTag',compact('datas','tag'));
     }
 
     public function postByDate(Request $request){
-        $default_language = front_language();
+        $lid = front_language()->id;
         $request->validate(['date' => 'required|date']);
         $date = $request->date;
         $day = Carbon::parse($date);
+
         // Range comparison instead of whereDate() so the created_at index can be used.
-        $datas = Post::whereBetween('created_at', [$day->copy()->startOfDay(), $day->copy()->endOfDay()])
-                        ->where('status',true)
-                        ->where('schedule_post',0)
-                        ->where('language_id','=',$default_language->id)
-                        ->with('category')
-                        ->orderBy('id','desc')
-                        ->paginate(10);
+        $datas = news_cache()->paginate("date:$lid:".$day->format('Y-m-d'), ['content'], 'date', fn () => Post::published()
+                        ->whereBetween('created_at', [$day->copy()->startOfDay(), $day->copy()->endOfDay()])
+                        ->where('language_id', $lid)
+                        ->with(post_card_relations())
+                        ->orderBy('id','desc'), 10)
+                    ->appends(['date' => $date]);
+
         return view('frontend.postByDate',compact('datas','date'));
     }
 
     public function postBySubcategory($category,$subcategory){
         return $this->details(request(), $category, $subcategory);
     }
-
     public function allPoll(){
         if(session()->has('language')){
             $default_language = Language::find(session()->get('language'));
@@ -495,24 +494,23 @@ class FrontendController extends Controller
             $data['results'] = Post::whereRaw('1 = 0')->paginate(10);
         } else {
             $data['results'] = Post::whereRaw('MATCH (title) AGAINST (? IN BOOLEAN MODE)', [$clean])
-                ->where('is_pending',0)->where('schedule_post',0)->where('status',true)
-                ->with('category')->paginate(10)->withQueryString();
+                ->where('is_pending',0)->where('schedule_post',0)->where('status','true')
+                ->with(post_card_relations())->paginate(10)->withQueryString();
         }
         $data['searchKey'] = $searchTerm;
         return view('frontend.full_text_search',$data);
     }
 
     public function page($slug){
-        $data['page'] = Page::where('slug',$slug)->first();
+        $data['page'] = news_cache()->remember('page:'.md5($slug), [], 'page', fn () => Page::where('slug',$slug)->first());
         if(!$data['page']){ return response()->view('errors.404', [], 404); }
         if($data['page']->status==1){
-            $data['ws']      = WidgetSetiings::find(1);
+            $data['ws']      = widget_settings();
             return view('frontend.page',$data);
         }else{
             return redirect()->route('frontend.index');
         }
     }
-
     public function language($id){
         Session::put('language', $id);
         return redirect()->route('frontend.index');
@@ -524,8 +522,8 @@ class FrontendController extends Controller
             return response()->view('errors.404', [], 404);
         }
         $data['admin'] = $admin;
-        $data['posts'] = $admin->posts()->where('status',true)->where('is_pending',0)->where('schedule_post',0)
-                            ->with('category')->latest()->paginate(8);
+        $data['posts'] = news_cache()->paginate("author:{$admin->id}:list", ["author:{$admin->id}"], 'author', fn () => Post::published()
+                            ->where('admin_id', $admin->id)->with(post_card_relations())->latest(), 8);
         $data['all_posts'] = array_fill(0, $data['posts']->total(), 0); // view only calls count()
         return view('frontend.author',$data);
     }

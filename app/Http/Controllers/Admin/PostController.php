@@ -266,7 +266,8 @@ class PostController extends Controller
         $ids = $this->parseIds($request);
         if ($ids) {
             Post::whereIn('id', $ids)->where($field, '!=', $value)->update([$field => $value]);
-            site_cache_bump(); // mass updates fire no model events, so bust the frontend cache manually
+            // mass updates fire no model events, so invalidate explicitly
+            news_cache()->postsChanged(Post::whereIn('id', $ids)->get(['id', 'category_id', 'subcategories_id', 'admin_id']));
         }
 
         return $this->respond('Data Updated successfully!');

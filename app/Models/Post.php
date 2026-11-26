@@ -50,6 +50,15 @@ class Post extends Model
         'schedule_post_date',
     ];
 
+    /** Posts visible to the public. status is an enum('true','false','draft'). */
+    public function scopePublished($query){
+        return $query->where('status', 'true')->where('is_pending', 0)->where('schedule_post', 0);
+    }
+
+    public function isPublished(): bool{
+        return in_array($this->status, ['true', true, 1], true) && ! $this->is_pending && ! $this->schedule_post;
+    }
+
     public function category(){
         return $this->belongsTo('App\Models\Category','category_id')->withDefault(function ($data) {
             foreach($data->getFillable() as $dt){

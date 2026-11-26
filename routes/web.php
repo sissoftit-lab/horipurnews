@@ -686,9 +686,9 @@ Route::get('/clear-cache', function () {
     
   
     Artisan::call('route:clear');
-    Artisan::call('optimize:clear');
-    Artisan::call('cache:clear');
+    Artisan::call('optimize:clear', ['--except' => 'cache']);
     Artisan::call('config:clear');
+    news_cache()->invalidateAll(); // never cache:clear here: on Redis it flushes the whole database
     return '✅ All caches cleared!';
 });
 
