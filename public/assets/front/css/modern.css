@@ -108,15 +108,26 @@ section,.home-front-area{padding-top:0}
 .logo-header .navbar-brand{padding:0;margin:0}
 .logo-header .logo-img{height:68px!important}
 .logo-header .add-banner img{max-height:68px}
-.mainmenu-area{border-bottom:2px solid var(--hp-accent)}
-.mainmenu-area .navbar{flex-wrap:nowrap;align-items:center}
+/* Category bar: charcoal with gold accent. Change --hp-gold / the gradient to restyle. */
+:root{--hp-gold:#f5c451}
+.mainmenu-area,.mainmenu-area.nav-fixed{background:linear-gradient(180deg,#242a33 0%,#14181e 100%);border-top:1px solid rgba(245,196,81,.45);border-bottom:2px solid var(--hp-gold);box-shadow:0 4px 14px rgba(0,0,0,.18)!important}
+.mainmenu-area .navbar{flex-wrap:nowrap;align-items:center;background:transparent}
 .mainmenu-area .navbar #main_menu{min-width:0}
 .mainmenu-area .navbar #main_menu ul.navbar-nav{flex-wrap:wrap;width:100%}
-.mainmenu-area .navbar #main_menu .navbar-nav .nav-link{padding:9px 7px;font-size:13px;font-weight:700;letter-spacing:0;white-space:nowrap}
-.mainmenu-area .navbar #main_menu .navbar-nav>li>.nav-link{border-bottom:2px solid transparent}
-.mainmenu-area .navbar #main_menu .navbar-nav>li>.nav-link:hover,.mainmenu-area .navbar #main_menu .navbar-nav>li>.nav-link.active{border-bottom-color:currentColor}
+.mainmenu-area .navbar #main_menu .navbar-nav .nav-link{padding:9px 7px;font-size:13.5px;font-weight:600;letter-spacing:0;white-space:nowrap}
+.mainmenu-area .navbar #main_menu .navbar-nav>li>.nav-link{position:static;display:block;color:#e8eaed;font-size:13px;padding:11px 6px;transition:color .2s,background-color .2s,box-shadow .2s}
+.mainmenu-area .navbar #main_menu .navbar-nav>li>.nav-link:hover,.mainmenu-area .navbar #main_menu .navbar-nav>li:hover>.nav-link{color:var(--hp-gold);background:rgba(255,255,255,.06);box-shadow:inset 0 -3px 0 rgba(245,196,81,.55)}
+.mainmenu-area .navbar #main_menu .navbar-nav>li>.nav-link.active{color:var(--hp-gold);background:rgba(245,196,81,.12);box-shadow:inset 0 -3px 0 var(--hp-gold)}
+.mainmenu-area .navbar #main_menu .navbar-nav>li>.nav-link.home-link{padding-left:9px;padding-right:9px}
+@media (min-width:1200px) and (max-width:1439px){
+  .mainmenu-area .navbar #main_menu .navbar-nav>li>.nav-link{font-size:12.5px;padding-left:5px;padding-right:5px}
+}
 .mainmenu-area .serch-icon-area{margin-left:auto;padding:0 0 0 10px;flex:0 0 auto}
-.mainmenu-area .serch-icon-area p{margin:0;padding:9px 4px}
+.mainmenu-area .serch-icon-area p{display:flex;align-items:center;justify-content:center;width:30px;height:30px;margin:0;border:1px solid rgba(245,196,81,.5);border-radius:50%;cursor:pointer;transition:background-color .2s}
+.mainmenu-area .navbar .serch-icon-area p i{color:var(--hp-gold);font-size:13px}
+.mainmenu-area .serch-icon-area p:hover{background:var(--hp-gold)}
+.mainmenu-area .navbar .serch-icon-area p:hover i{color:#14181e}
+.mainmenu-area .search-form-area{z-index:100}
 
 /* Category headings (home + category page) */
 .cat-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;border-bottom:1px solid rgba(0,0,0,.1)}
@@ -158,10 +169,9 @@ section,.home-front-area{padding-top:0}
   .logo-header .logo-img{width:auto!important;height:auto!important;max-height:56px;max-width:100%;object-position:center}
   .mobile-cats{flex:1;min-width:0}
   .mobile-cats ul{display:flex;overflow-x:auto;margin:0;padding:0;list-style:none;white-space:nowrap;scrollbar-width:none}
-  .mobile-cats a{display:block;padding:8px 9px;font-size:13.5px;font-weight:700;color:#222;text-decoration:none;border-bottom:2px solid transparent}
-  .mobile-cats a.active{color:var(--hp-accent);border-bottom-color:var(--hp-accent)}
+  .mobile-cats a{display:block;padding:10px;font-size:13.5px;font-weight:600;color:#e8eaed;text-decoration:none}
+  .mobile-cats a.active{color:var(--hp-gold);background:rgba(245,196,81,.12);box-shadow:inset 0 -3px 0 var(--hp-gold)}
   .mainmenu-area .navbar{padding:0}
-  .mainmenu-area .navbar .serch-icon-area{position:static;border-left:1px solid #e9ebee}
-  .mainmenu-area .navbar .serch-icon-area p{padding:8px 6px}
+  .mainmenu-area .navbar .serch-icon-area{position:static;padding:0 4px 0 8px;border-left:1px solid rgba(255,255,255,.14)}
 }
 .home-front-area .main-content:not(.tab-view)>.row{margin-left:-6px;margin-right:-6px}

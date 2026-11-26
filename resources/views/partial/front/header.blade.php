@@ -158,6 +158,9 @@
 							</style>
 							<div class="collapse navbar-collapse d-none d-md-block" id="main_menu">
 								<ul class="navbar-nav mr-auto" style="flex-direction: row;">
+									<li class="nav-item">
+										<a class="nav-link home-link {{ request()->routeIs('frontend.index') ? 'active' : '' }}" href="{{ route('frontend.index') }}" title="{{ __('Home') }}" aria-label="{{ __('Home') }}"><i class="fas fa-home"></i></a>
+									</li>
 									@foreach ($categories as $category)
 										@if ($loop->first)
 											<li class="nav-item">
@@ -270,6 +273,9 @@
 							</div>
 							<div class="mobile-cats d-md-none">
 								<ul>
+									<li>
+										<a class="{{ request()->routeIs('frontend.index') ? 'active' : '' }}" href="{{ route('frontend.index') }}" aria-label="{{ __('Home') }}"><i class="fas fa-home"></i></a>
+									</li>
 									@foreach ($categories as $category)
 										<li>
 											<a class="{{ urldecode(url()->current()) === urldecode(route('frontend.category', $category->slug)) ? 'active' : '' }}" href="{{ route('frontend.category', $category->slug) }}">{{ $category->title }}</a>
