@@ -44,11 +44,55 @@ section,.home-front-area{padding-top:0}
 .widget,.sidebar-widget{margin-bottom:16px}
 
 /* Footer: compact */
-.footer{padding:24px 0 0;margin-top:14px}
-.footer .footer-widget .title{font-size:15px;margin-bottom:10px}
-.footer .footer-widget ul li{margin-bottom:4px}
-.footer .footer-widget ul li a{font-size:13px}
-.footer .copy-bg{padding:8px 0}
+.footer{padding:20px 0 0;margin-top:14px;color:#fff;border-top:3px solid rgba(0,0,0,.2)}
+.footer .footer-container{width:92%;max-width:1400px}
+.footer .footer-grid>[class*="col-"]{margin-bottom:16px}
+.footer .footer-widget .title{position:relative;font-size:13px;font-weight:700;letter-spacing:.5px;margin:0 0 10px;padding-bottom:6px}
+.footer .footer-widget .title::after{content:"";position:absolute;inset-inline-start:0;bottom:0;width:28px;height:2px;border-radius:2px;background:rgba(255,255,255,.7)}
+.footer .footer-widget ul{margin:0;padding:0;list-style:none}
+.footer .footer-widget ul li{margin:0}
+.footer .footer-widget ul li a{font-size:13px;line-height:1.4;color:rgba(255,255,255,.88);text-decoration:none;transition:color .2s,background-color .2s}
+.footer .footer-widget ul li a:hover,.footer .footer-widget ul li a:focus{color:#fff}
+/* about + social */
+.footer .footer-logo{margin:0 0 8px}
+.footer .logo-img{height:56px!important;width:auto!important;max-width:100%;object-position:left center}
+.footer .address p{display:flex;gap:8px;margin:0 0 4px;font-size:12.5px;line-height:1.45;color:rgba(255,255,255,.88)}
+.footer .address i{flex:0 0 13px;margin-top:3px;font-size:11px;text-align:center}
+.footer .address a{color:inherit;word-break:break-word}
+.footer .fotter-social-links ul{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.footer .fotter-social-links ul li a{display:flex;align-items:center;justify-content:center;width:30px;height:30px;margin:0;border-radius:50%;font-size:13px;color:#fff;background:rgba(0,0,0,.25)}
+.footer .fotter-social-links ul li a:hover{background:rgba(0,0,0,.5)}
+/* categories */
+.footer .info-link-widget .link-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:12px}
+.footer .info-link-widget .link-list a{display:block;padding:3px 0}
+.footer .info-link-widget .link-list a:hover{text-decoration:underline}
+/* popular posts */
+.footer .blog-widget .title{padding-bottom:6px}
+.footer .blog-widget .post-list li{margin-bottom:8px}
+.footer .blog-widget .post-list li:last-child{margin-bottom:0}
+.footer .blog-widget .post-list li .post{display:flex;align-items:center;gap:10px}
+.footer .blog-widget .post-list li .post .post-img{flex:0 0 56px;margin:0}
+.footer .blog-widget .post-list li .post .post-img img{display:block;width:56px;height:40px;object-fit:cover;border-radius:4px}
+.footer .blog-widget .post-list li .post .post-details{min-width:0}
+.footer .blog-widget .post-list li .post .post-title{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:12.5px;line-height:1.4;font-weight:600}
+.footer .blog-widget .post-list li .post:hover .post-title{text-decoration:underline}
+/* tags */
+.footer .footer-grid .footer-widget{margin-top:0}
+.footer .tags-widget .tag-list{display:flex;flex-wrap:wrap;gap:6px;margin:0}
+.footer .tags-widget .tag-list li{margin:0}
+.footer .tags-widget .tag-list li a{display:block;padding:2px 10px;font-size:12px;border:1px solid rgba(255,255,255,.4);border-radius:20px}
+.footer .tags-widget .tag-list li a:hover{background:rgba(0,0,0,.3);border-color:transparent;color:#fff}
+/* copyright bar */
+.footer .copy-bg{margin-top:0;padding:7px 0}
+.footer .copy-row{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:4px 16px}
+.footer .copy-bg .content .content p,.footer .copy-bg .content .content p a{font-size:12px;line-height:20px;color:rgba(255,255,255,.88)}
+.footer .footerMenu .nav .nav-link{padding:0 7px;font-size:12px;line-height:20px;color:rgba(255,255,255,.88)}
+.footer .footerMenu .nav .nav-link:hover{color:#fff;text-decoration:underline}
+@media (max-width:767px){
+  .footer .footer-container{width:100%}
+  .footer .copy-row{justify-content:center;text-align:center}
+  .footer .footerMenu .nav{justify-content:center}
+}
 .bottomtotop{border-radius:50%;box-shadow:var(--hp-shadow)}
 
 @media (max-width:768px){
