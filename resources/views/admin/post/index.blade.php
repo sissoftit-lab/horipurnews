@@ -94,7 +94,7 @@
 .pp-page:disabled{opacity:.4;cursor:not-allowed}
 .pp-gap{align-self:center;color:var(--pp-mute);padding:0 4px}
 .pp-perpage{display:flex;align-items:center;gap:8px;color:var(--pp-mute);font-size:12.5px}
-.pp-perpage .pp-select{width:68px;height:29px}
+.pp-perpage .pp-select{width:80px;height:29px}
 .pp-loading{position:absolute;inset:0;background:rgba(255,255,255,.7);backdrop-filter:blur(1px);display:none;align-items:flex-start;justify-content:center;padding-top:80px;z-index:3}
 .pp-loading.show{display:flex}
 .pp-spin{width:34px;height:34px;border:3px solid var(--pp-brand-soft);border-top-color:var(--pp-brand);border-radius:50%;animation:ppspin .7s linear infinite}
@@ -226,7 +226,7 @@
             <div class="pp-perpage">
                 {{ __('Rows') }}
                 <select id="ppPerPage" class="pp-select">
-                    <option>10</option><option selected>25</option><option>50</option><option>100</option>
+                    <option>10</option><option selected>25</option><option>50</option><option>100</option><option>200</option><option>500</option><option>1000</option>
                 </select>
             </div>
         </div>

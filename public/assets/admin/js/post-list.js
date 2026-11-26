@@ -26,6 +26,16 @@
         $('.postCheck').each(function () { $(this).closest('tr').toggleClass('is-selected', this.checked); });
     }
 
+    // IDs travel in the query string, so send large selections in batches
+    // to stay under the web server's URL length limit.
+    function sendInBatches(url, ids) {
+        var size = 200;
+        return $.ajax({ url: url, data: ids ? { ids: ids.slice(0, size).join(',') } : {}, dataType: 'json' })
+            .then(function (r) {
+                return ids && ids.length > size ? sendInBatches(url, ids.slice(size)) : r;
+            });
+    }
+
     function hasFilters() {
         return !!(S.q || S.category || S.type || S.state || S.from);
     }
@@ -208,7 +218,7 @@
     $('#ppBulkDelete').on('click', function () {
         var ids = selectedIds();
         if (!ids.length) { return; }
-        pendingDelete = { url: PP.bulkDeleteUrl, data: { ids: ids.join(',') } };
+        pendingDelete = { url: PP.bulkDeleteUrl, ids: ids };
         $('#ppDeleteText').text(ids.length + ' selected post' + (ids.length > 1 ? 's' : '') + ' and related data will be permanently removed.');
         $('#ppDeleteModal').modal('show');
     });
@@ -217,9 +227,9 @@
         if (!pendingDelete) { return; }
         var job = pendingDelete, $b = $(this).prop('disabled', true);
         pendingDelete = null;
-        $.ajax({ url: job.url, data: job.data || {}, dataType: 'json' })
+        sendInBatches(job.url, job.ids)
             .done(function (r) { toast(typeof r === 'string' ? r : (r.message || 'Deleted')); load(); })
-            .fail(function () { toast('Delete failed.', true); })
+            .fail(function () { toast('Delete failed.', true); load(); })
             .always(function () { $b.prop('disabled', false); $('#ppDeleteModal').modal('hide'); });
     });
 
@@ -227,9 +237,9 @@
     $('#ppBulk').on('click', '[data-bulk]', function () {
         var ids = selectedIds();
         if (!ids.length) { return; }
-        $.ajax({ url: PP.bulkUrl + '/' + $(this).data('bulk'), data: { ids: ids.join(',') }, dataType: 'json' })
+        sendInBatches(PP.bulkUrl + '/' + $(this).data('bulk'), ids)
             .done(function (r) { toast(r.message || 'Updated'); load(); })
-            .fail(function () { toast('Bulk action failed.', true); });
+            .fail(function () { toast('Bulk action failed.', true); load(); });
     });
 
     /* ---------- boot ---------- */

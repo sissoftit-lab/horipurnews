@@ -82,7 +82,7 @@ class PostController extends Controller
         }
 
         $perPage = (int) $request->input('per_page', 25);
-        $perPage = in_array($perPage, [10, 25, 50, 100]) ? $perPage : 25;
+        $perPage = in_array($perPage, [10, 25, 50, 100, 200, 500, 1000]) ? $perPage : 25;
 
         $posts = $base
             ->select(self::LIST_COLUMNS)
