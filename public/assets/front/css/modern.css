@@ -10,7 +10,7 @@ body{font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;backgroun
 .main-top-header .user-profile img{width:24px;height:24px;border-radius:50%;object-fit:cover}
 .main-top-header select{font-size:12px;padding:1px 4px;border-radius:4px}
 .logo-header{padding:4px 0}
-.logo-img{height:34px!important;width:auto!important;max-width:220px;object-fit:contain}
+.logo-img{height:100px!important;width:auto!important;max-width:100%;object-fit:contain}
 .logo-header .add-banner img{max-height:50px;width:auto}
 
 /* Menu */
@@ -52,7 +52,8 @@ section,.home-front-area{padding-top:0}
 .bottomtotop{border-radius:50%;box-shadow:var(--hp-shadow)}
 
 @media (max-width:768px){
-  .logo-img{max-width:170px}
+  .logo-header .navbar-brand{width:100%;margin-right:0}
+  .logo-img{width:100%!important;height:auto!important;max-height:120px;object-position:left center}
   .mycol{padding-left:6px;padding-right:6px}
   .header-area .title{font-size:14px}
 }

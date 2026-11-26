@@ -76,10 +76,6 @@
 		</section>
 
     <style>
-        .logo-img {
-            width: 250px !important;
-            height: 40px;
-        }
         
         .navbar-brand {
             display: flex;
@@ -88,14 +84,6 @@
             text-align: left;
         }
         
-        @media (max-width: 992px) {
-            .logo-img {
-                margin-left: 0 !important;
-                width: 100% !important;
-                
-            }
-        
-        }
 
     </style>
 		<section class="logo-header">
