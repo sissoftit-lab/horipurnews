@@ -71,7 +71,7 @@
 	<link rel="stylesheet" id="color" href="{{ asset('assets/front/css/color.php?base_color='.str_replace('#','', $gs->theme_color).'&'.'footer_color='.str_replace('#','',$gs->footer_color).'&'.'copyright_color='.str_replace('#','',$gs->copyright_color)) }}">
 	<link rel="stylesheet" id="color" href="{{ asset('assets/front/css/font.php?font_familly='.$default_font->font_family) }}">
 	<!-- modern compact overrides -->
-	<link rel="stylesheet" href="{{asset('assets/front/css/modern.css')}}?v=4">
+	<link rel="stylesheet" href="{{asset('assets/front/css/modern.css')}}?v=5">
     @stack('css')
 	@include('partial.front.tracking-head')
 </head>

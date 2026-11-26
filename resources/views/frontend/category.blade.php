@@ -21,12 +21,6 @@
             text-decoration: none;
         }
         
-        .pagination .page-item.active .page-link {
-            background-color: #007bff;
-            color: #fff;
-            border-color: #007bff;
-        }
-        
         .pagination .page-item.disabled .page-link {
             color: #aaa;
             pointer-events: none;
@@ -41,49 +35,6 @@
             }
         }
         
-    </style>
-    <style>
-        .custom-tab {
-            position: relative;
-            list-style: none;
-            margin: 0;
-            padding: 0;
-            width: 100%;
-        }
-    
-        .tab-link {
-            display: inline-block;
-            background: #196cad;
-            color: white;
-            font-size: 20px !important;
-            padding: 8px 20px;
-            position: relative;
-            font-family: 'SolaimanLipi', 'Siyam Rupali', sans-serif;
-            text-decoration: none;
-            margin-left: 0;
-        }
-    
-        .tab-link::after {
-            content: "";
-            position: absolute;
-            top: 0;
-            right: -25px;
-            width: 0;
-            height: 0;
-            border-top: 35px solid transparent;
-            border-left: 25px solid {{ $data->color ?? '#0b9d4c' }};
-        }
-    
-        .custom-tab::after {
-            content: "";
-            display: block;
-            height: 3px;
-            background-color: red;
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-        }
     </style>
     <style>
     .full-width{
@@ -163,37 +114,13 @@
 
 @section('contents')
     	<!-- Breadcrumb Area Start -->
-	<div class="breadcrumb-area">
+	<div class="breadcrumb-area cat-banner">
         <div class="container-fluid full-width" >
-            <div class="row">
-                <div class="col-lg-12">
-                    <ul class="pages">
-                        <!--<li>-->
-                        <!--    <a href="#">-->
-                        <!--        {{__('Home')}}-->
-                        <!--    </a>-->
-                        <!--</li>-->
-                        <!--<li>-->
-                        <!--    <a href="#">-->
-                        <!--        {{__('News')}}-->
-                        <!--    </a>-->
-                        <!--</li>-->
-                        <!--<li class="active " >-->
-                        <!--    <a href="#" style="color :{{$data->color}}; ">-->
-                        <!--        {{$data->title}}-->
-                        <!--    </a>-->
-                        <!--</li>-->
-                        <li class="custom-tab">
-                            <a href="#" class="tab-link">
-                                {{ $data->title }}
-                            </a>
-                        </li>
-                    </ul>
-                </div>
+            <div class="cat-head" style="--cat-color: {{ $data->color ?: '#b42024' }}">
+                <h1>{{ $data->title }}</h1>
             </div>
         </div>
-</div>
-<!-- Breadcrumb Area Start -->
+    </div>
 
 <!-- Categori Page Start -->
 <section class="categori-page-news">

@@ -124,41 +124,6 @@
 				</div>
 			</div>
 		</section>
-		<style>
-		    
-            hr.only-pt {
-                display: none;
-                border: none; 
-                border-top: 2px solid #ccc;
-                padding-right: 15px;
-                padding-left: 15px;
-                margin-bottom: 0;
-            }
-            
-            hr.only-pt2 {
-                display: none;
-                border: none; 
-                border-top: 2px solid #ccc;
-                padding-right: 15px;
-                padding-left: 15px;
-                margin-top: 0;
-            }
-            
-            @media (max-width: 767.98px) {
-                hr.only-pt2 {
-                    display: block;
-                }
-                hr.only-pt {
-                    display: block;
-                }
-            }
-
-
-		</style>
-        
-        <div class="container-fluid full-width" >
-    	    <hr class="only-pt">
-    	</div>
 
 		<div class="mainmenu-area">
 			<div class="container-fluid full-width" >
@@ -191,12 +156,12 @@
 									display: block !important;
 								}
 							</style>
-							<div class="collapse navbar-collapse fixed-height d-none d-md-block" id="main_menu">
+							<div class="collapse navbar-collapse d-none d-md-block" id="main_menu">
 								<ul class="navbar-nav mr-auto" style="flex-direction: row;">
 									@foreach ($categories as $category)
 										@if ($loop->first)
 											<li class="nav-item">
-												<a class="nav-link " href="{{ route('frontend.category',$category->slug)}}">
+												<a class="nav-link {{ urldecode(url()->current()) === urldecode(route('frontend.category',$category->slug)) ? 'active' : '' }}" href="{{ route('frontend.category',$category->slug)}}">
 													{{$category->title}}</a>
 											</li>
 										@endif
@@ -295,12 +260,21 @@
 											@if ($loop->first)
 											@else
 												<li class="nav-item">
-													<a class="nav-link" href="{{ route('frontend.category',$category->slug)}}">{{$category->title}}</a>
+													<a class="nav-link {{ urldecode(url()->current()) === urldecode(route('frontend.category',$category->slug)) ? 'active' : '' }}" href="{{ route('frontend.category',$category->slug)}}">{{$category->title}}</a>
 												</li>
 											@endif
 										@endif
 									@endforeach
 
+								</ul>
+							</div>
+							<div class="mobile-cats d-md-none">
+								<ul>
+									@foreach ($categories as $category)
+										<li>
+											<a class="{{ urldecode(url()->current()) === urldecode(route('frontend.category', $category->slug)) ? 'active' : '' }}" href="{{ route('frontend.category', $category->slug) }}">{{ $category->title }}</a>
+										</li>
+									@endforeach
 								</ul>
 							</div>
 							<div class="serch-icon-area">
@@ -318,128 +292,3 @@
 				</div>
 			</div>
 		</div>
-
-	
-		<style>
-            #main_menu ul.navbar-nav li {
-                margin-right: 18px;
-            }
-        
-            #main_menu ul.navbar-nav .nav-link {
-                font-weight: bold;
-            }
-            
-        </style>
-
-		<div class="container-fluid full-width" >
-		    <div class="collapse navbar-collapse fixed-height d-block d-md-none" id="main_menu">
-                <ul class="navbar-nav flex-row flex-nowrap overflow-auto" style="white-space: nowrap; flex-direction:row">
-                    @foreach ($categories as $category)
-                        @if ($loop->first)
-                            <li class="nav-item me-3">
-                                <a class="nav-link active" href="{{ route('frontend.index') }}">
-                                    {{ $category->title }}
-                                </a>
-                            </li>
-                        @endif
-            
-                        @if ($category->child->count() > 0)
-                            <li class="nav-item dropdown mega-menu me-3">
-                                <a class="nav-link dropdown-toggle" href="{{ route('frontend.category', $category->slug) }}">
-                                    {{ $category->title }}
-                                </a>
-                                <div class="dropdown-menu">
-                                    <div class="row m-0 p-0">
-                                        <div class="col-lg-2 p-0">
-                                            <div class="nav flex-column">
-                                                @foreach ($category->child->where('show_on_menu', 1) as $child)
-                                                    <a class="nav-link tab-link"
-                                                       href="{{ route('frontend.postBySubcategory.details', [$category->slug, $child->slug]) }}"
-                                                       data-tab="#{{ $child->id }}">
-                                                        {{ $child->title }}
-                                                    </a>
-                                                @endforeach
-                                            </div>
-                                        </div>
-                                        <div class="col-lg-10">
-                                            <div class="tab-content">
-                                                @foreach ($category->child->where('show_on_menu', 1) as $child)
-                                                    <div id="{{ $child->id }}" class="go-tab-c {{ $loop->first ? 'active' : '' }}">
-                                                        @php $menuPosts = subcat_recent_posts($child->id, 4); @endphp
-                                                        @if ($menuPosts->count() > 0)
-                                                            <div class="row">
-                                                                @foreach ($menuPosts as $post)
-                                                                    <div class="col-lg-3 col-md-4 col-sm-6 pr-0">
-                                                                        <div class="single-news-menu">
-                                                                            <a href="{{ route('frontend.postBySubcategory.details', [$post->category->slug, $post->slug]) }}">
-                                                                                <div class="content-wrapper">
-                                                                                    <div class="img">
-                                                                                        @if ($post->image_big || $post->rss_image)
-                                                                                            <div class="tag" style="background: {{ $child->color }}">
-                                                                                                {{ $child->title }}
-                                                                                            </div>
-                                                                                        @endif
-            
-                                                                                        @if ($post->image_big)
-                                                                                            <img src="{{ asset('assets/images/post/' . $post->image_big) }}" alt="">
-                                                                                        @elseif ($post->rss_image)
-                                                                                            <img src="{{ $post->rss_image }}" alt="">
-                                                                                        @else
-                                                                                            <img src="{{ asset('assets/images/nopic.png') }}" alt="">
-                                                                                        @endif
-            
-                                                                                        @if ($post->post_type == 'audio')
-                                                                                            <span class="vid-aud"><i class="fas fa-volume-up"></i></span>
-                                                                                        @elseif ($post->post_type == 'video')
-                                                                                            <span class="vid-aud"><i class="fas fa-video"></i></span>
-                                                                                        @endif
-                                                                                    </div>
-                                                                                    <div class="inner-content">
-                                                                                        <a href="{{ route('frontend.postBySubcategory.details', [$post->category->slug, $post->slug]) }}">
-                                                                                            <h4 class="title">
-                                                                                                {{ mb_strlen($post->title) > 40 ? mb_substr($post->title, 0, 40, 'utf-8') . '...' : $post->title }}
-                                                                                            </h4>
-                                                                                            <ul class="post-meta">
-                                                                                                <li><span>{{ $post->createdAt() }}</span></li>
-                                                                                                <li><span>|</span></li>
-                                                                                                <li><span>{{ $post->admin->name }}</span></li>
-                                                                                            </ul>
-                                                                                        </a>
-                                                                                    </div>
-                                                                                </div>
-                                                                            </a>
-                                                                        </div>
-                                                                    </div>
-                                                                @endforeach
-                                                            </div>
-                                                        @endif
-                                                    </div>
-                                                @endforeach
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </li>
-                        @elseif (!$loop->first)
-                            <li class="nav-item me-3">
-                                <a class="nav-link" href="{{ route('frontend.category', $category->slug) }}">
-                                    {{ $category->title }}
-                                </a>
-                            </li>
-                        @endif
-                    @endforeach
-                </ul>
-            </div>
-		</div>
-
-	<div class="container-fluid full-width" >
-	    <hr class="only-pt2">
-	</div>
-		
-		
-		
-		
-		
-		
-
-

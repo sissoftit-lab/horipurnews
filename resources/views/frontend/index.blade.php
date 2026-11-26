@@ -342,7 +342,7 @@
                                                                                         {{strlen($post->title)>170 ? mb_substr($post->title,0,170,'utf-8').'...' : $post->title}}
                                                                                     </h4>
                                                                                     <p class="text">
-                                                                                        {!! (strlen(convertUtf8(strip_tags($post->description))) > 400) ? convertUtf8(substr(strip_tags($post->description), 0, 400)) . '...' : convertUtf8(strip_tags($post->description)) !!}
+                                                                                        {{ \Illuminate\Support\Str::limit(html_entity_decode(strip_tags(convertUtf8($post->description)), ENT_QUOTES | ENT_HTML5, 'UTF-8'), 180) }}
                                                                                     </p>
                                                                                     <ul class="post-meta">
                                                                                         <li>
@@ -465,13 +465,10 @@
                                 
                                 <div class="row">
                                     <div class="col-12" style="padding-left:0px; padding-right:0px">
-                                        <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
-                                            <h3 class="mb-0" style="font-size: 18px; color: red; text-decoration: underline;font-weight: bolder;">
-                                                {{ $home_page_post->title }}
-                                            </h3>
-                                            <a href="{{ route('frontend.category', $home_page_post->slug) }}"
-                                               class="btn btn-sm btn-outline-primary">
-                                                {{ __('View all') }}
+                                        <div class="cat-head" style="--cat-color: {{ $home_page_post->color ?: '#b42024' }}">
+                                            <h3><a href="{{ route('frontend.category', $home_page_post->slug) }}">{{ $home_page_post->title }}</a></h3>
+                                            <a href="{{ route('frontend.category', $home_page_post->slug) }}" class="cat-more">
+                                                {{ __('View all') }} <i class="fas fa-angle-right"></i>
                                             </a>
                                         </div>
                                     </div>
@@ -511,9 +508,7 @@
                                                                 {{ strlen($post->title) > 170 ? mb_substr($post->title, 0, 170, 'utf-8') . '...' : $post->title }}
                                                             </h4>
                                                             <p class="text">
-                                                                {!! (strlen(convertUtf8(strip_tags($post->description))) > 400) 
-                                                                    ? convertUtf8(substr(strip_tags($post->description), 0, 400)) . '...' 
-                                                                    : convertUtf8(strip_tags($post->description)) !!}
+                                                                {{ \Illuminate\Support\Str::limit(html_entity_decode(strip_tags(convertUtf8($post->description)), ENT_QUOTES | ENT_HTML5, 'UTF-8'), 180) }}
                                                             </p>
                                                             <ul class="post-meta">
                                                                 <li><a href="{{ route('frontend.postByDate') . '?date=' . $post->created_at->format('Y-m-d') }}">{{ $post->date ? \Carbon\Carbon::parse($post->date)->format('M d, Y') : $post->created_at->format('M d, Y') }}</a></li>
@@ -1095,16 +1090,13 @@
                         <div class="row mb-4 d-none d-md-flex">
                             
                             <div class="col-12" style="padding-left:0px; padding-right:0px">
-                                <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
-                                    <h3 class="mb-0" style="font-size: 18px; color: red; text-decoration: underline;font-weight: bolder;">
-                                        {{ $home_page_post->title }}
-                                    </h3>
-                                    <a href="{{ route('frontend.category', $home_page_post->slug) }}"
-                                       class="btn btn-sm btn-outline-primary">
-                                        {{ __('View all') }}
-                                    </a>
-                                </div>
-                            </div>
+                                        <div class="cat-head" style="--cat-color: {{ $home_page_post->color ?: '#b42024' }}">
+                                            <h3><a href="{{ route('frontend.category', $home_page_post->slug) }}">{{ $home_page_post->title }}</a></h3>
+                                            <a href="{{ route('frontend.category', $home_page_post->slug) }}" class="cat-more">
+                                                {{ __('View all') }} <i class="fas fa-angle-right"></i>
+                                            </a>
+                                        </div>
+                                    </div>
                             
                             
         
