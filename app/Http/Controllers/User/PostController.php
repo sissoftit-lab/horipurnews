@@ -11,6 +11,8 @@ use Illuminate\Http\Request;
 
 class PostController extends Controller
 {
+    use OwnsPosts;
+
     public function __construct()
     {
         $this->middleware('auth');
@@ -107,7 +109,7 @@ class PostController extends Controller
     }
 
     public function edit($id){
-        $data = Post::find($id);
+        $data = $this->ownPost($id);
         $categories = Category::where('parent_id','=',NULL)->get();
         $languages = Language::orderBy('id','desc')->get();
 
@@ -134,7 +136,7 @@ class PostController extends Controller
     }
 
     public function view($id){
-        $data = Post::find($id);
+        $data = $this->ownPost($id);
         if($data->post_type == 'article'){
             return view('admin.article.view',compact('data'));
         }
@@ -288,7 +290,7 @@ class PostController extends Controller
     }
 
     public function delete($id){
-        $data = Post::find($id);
+        $data = $this->ownPost($id);
         foreach($data->views as $view){
            $view->delete();
         }
@@ -348,6 +350,11 @@ class PostController extends Controller
                     $sort->delete();
                 }
             }
+        }
+
+        foreach($data->galleries as $gallery){
+            @unlink('assets/images/galleries/'.$gallery->photo);
+            $gallery->delete();
         }
 
         @unlink('assets/images/post/'.$data->image_big);
@@ -420,6 +427,11 @@ class PostController extends Controller
                         $sort->delete();
                     }
                 }
+            }
+
+            foreach($post->galleries as $gallery){
+                @unlink('assets/images/galleries/'.$gallery->photo);
+                $gallery->delete();
             }
 
             @unlink('assets/images/post/'.$post->image_big);

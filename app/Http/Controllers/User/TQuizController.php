@@ -18,6 +18,8 @@ use Illuminate\Support\Str;
 
 class TQuizController extends Controller
 {
+    use OwnsPosts;
+
     public function __construct()
     {
         $this->middleware('auth');
@@ -201,6 +203,9 @@ class TQuizController extends Controller
     }
 
     public function update(Request $request,$id){
+        // only the author may change this post
+        $this->ownPost($id);
+
         $rules = [
             'language_id' => 'required',
             'title' => 'required',
@@ -456,7 +461,8 @@ class TQuizController extends Controller
     }
 
     public function removequestion($id){
-        $data = TriviaQuestion::find($id);
+        $data = TriviaQuestion::findOrFail($id);
+        $this->ownPost($data->post_id);
 
         if($data->answers->count()>0){
             foreach($data->answers as $answer){
@@ -469,13 +475,15 @@ class TQuizController extends Controller
     }
 
     public function removeresult($id){
-        $data = TriviaResult::find($id);
+        $data = TriviaResult::findOrFail($id);
+        $this->ownPost($data->post_id);
         @unlink('assets/images/quizresult/'.$data->result_photo);
         $data->delete();
     }
 
     public function removeanswer($id){
-        $data = TriviaAnswer::find($id);
+        $data = TriviaAnswer::findOrFail($id);
+        $this->ownPost(TriviaQuestion::findOrFail($data->trivia_question_id)->post_id);
         @unlink('assets/images/quizanswer/'.$data->answer_photo);
         $data->delete();
     }

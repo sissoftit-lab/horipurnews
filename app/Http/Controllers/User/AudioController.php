@@ -17,6 +17,8 @@ use Illuminate\Support\Str;
 
 class AudioController extends Controller
 {
+    use OwnsPosts;
+
     public function __construct()
     {
         $this->middleware('auth');
@@ -135,6 +137,9 @@ class AudioController extends Controller
     }
 
     public function update(Request $request,$id){
+        // only the author may change this post
+        $this->ownPost($id);
+
 
         $rules = [
             'title' => 'required',

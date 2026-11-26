@@ -16,6 +16,8 @@ use Illuminate\Support\Str;
 
 class ArticleController extends Controller
 {
+    use OwnsPosts;
+
     public function __construct()
     {
         $this->middleware('auth');
@@ -149,6 +151,9 @@ class ArticleController extends Controller
     }
 
     public function update(Request $request,$id){
+        // only the author may change this post
+        $this->ownPost($id);
+
 
         $rules = [
             'language_id' => 'required',

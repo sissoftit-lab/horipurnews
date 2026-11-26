@@ -15,6 +15,8 @@ use Illuminate\Support\Str;
 
 class ShortListController extends Controller
 {
+    use OwnsPosts;
+
     public function __construct()
     {
         $this->middleware('auth');
@@ -94,6 +96,9 @@ class ShortListController extends Controller
     }
 
     public function update(Request $request,$id){
+        // only the author may change this post
+        $this->ownPost($id);
+
         $rules = [
             'language_id' => 'required',
             'title' => 'required',
@@ -168,7 +173,8 @@ class ShortListController extends Controller
     }
 
     public function remove($id){
-        $data = ShortList::find($id);
+        $data = ShortList::findOrFail($id);
+        $this->ownPost($data->post_id);
         @unlink('assets/images/sort/'.$data->item_photo);
         $data->delete();
     }

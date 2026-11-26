@@ -15,6 +15,8 @@ use Illuminate\Support\Str;
 
 class VideoController extends Controller
 {
+    use OwnsPosts;
+
     public function __construct()
     {
         $this->middleware('auth');
@@ -151,6 +153,9 @@ class VideoController extends Controller
     }
 
     public function update(Request $request,$id){
+        // only the author may change this post
+        $this->ownPost($id);
+
         $rules = [
             'title' => 'required',
             'slug' => 'required|unique:posts,slug,'.$id,

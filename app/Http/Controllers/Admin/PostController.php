@@ -279,7 +279,7 @@ class PostController extends Controller
      */
     private function destroyPosts($posts): void
     {
-        $posts->load(['tquizs.answers', 'tresults', 'pquizs.answers', 'presults', 'sorts']);
+        $posts->load(['galleries', 'tquizs.answers', 'tresults', 'pquizs.answers', 'presults', 'sorts']);
 
         $files = [];
         $add = function (string $dir, $name) use (&$files) {
@@ -333,6 +333,11 @@ class PostController extends Controller
                             $sort->delete();
                         }
                         break;
+                }
+
+                foreach ($post->galleries as $gallery) {
+                    $add('assets/images/galleries', $gallery->photo);
+                    $gallery->delete();
                 }
 
                 $add('assets/images/post', $post->image_big);

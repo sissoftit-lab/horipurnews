@@ -17,6 +17,8 @@ use Image;
 use Illuminate\Support\Str;
 class PQuizController extends Controller
 {
+    use OwnsPosts;
+
     public function __construct()
     {
         $this->middleware('auth');
@@ -205,6 +207,9 @@ class PQuizController extends Controller
     }
 
     public function update(Request $request,$id){
+        // only the author may change this post
+        $this->ownPost($id);
+
         $rules = [
             'language_id' => 'required',
             'title' => 'required',
@@ -454,7 +459,8 @@ class PQuizController extends Controller
 
 
     public function removepquestion($id){
-        $data = PersonalityQuestion::find($id);
+        $data = PersonalityQuestion::findOrFail($id);
+        $this->ownPost($data->post_id);
 
         if($data->answers->count()>0){
             foreach($data->answers as $answer){
@@ -467,13 +473,15 @@ class PQuizController extends Controller
     }
 
     public function removepresult($id){
-        $data = PersonalityResult::find($id);
+        $data = PersonalityResult::findOrFail($id);
+        $this->ownPost($data->post_id);
         @unlink('assets/images/presult/'.$data->result_photo);
         $data->delete();
     }
 
     public function removeanswer($id){
-        $data = PersonalityAnswer::find($id);
+        $data = PersonalityAnswer::findOrFail($id);
+        $this->ownPost(PersonalityQuestion::findOrFail($data->personality_question_id)->post_id);
         @unlink('assets/images/panswer/'.$data->answer_photo);
         $data->delete();
     }

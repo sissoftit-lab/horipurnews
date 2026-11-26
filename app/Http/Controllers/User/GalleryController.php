@@ -9,6 +9,8 @@ use App\Models\Post;
 
 class GalleryController extends Controller
 {
+    use OwnsPosts;
+
     public function __construct()
     {
         $this->middleware('auth');
@@ -18,7 +20,7 @@ class GalleryController extends Controller
     {
         $data[0] = 0;
         $id = $_GET['id'];
-        $post = Post::findOrFail($id);
+        $post = $this->ownPost($id);
         if(count($post->galleries))
         {
             $data[0] = 1;
@@ -30,7 +32,7 @@ class GalleryController extends Controller
     public function store(Request $request)
     {
         $data = null;
-        $lastid = $request->post_id;
+        $lastid = $this->ownPost($request->post_id)->id;
         if ($files = $request->file('gallery')){
             foreach ($files as  $key => $file){
                 $val = $file->getClientOriginalExtension();
@@ -53,6 +55,7 @@ class GalleryController extends Controller
     {
         $id = $_GET['id'];
         $gal = Gallery::findOrFail($id);
+        $this->ownPost($gal->post_id);
         @unlink('assets/images/galleries/'.$gal->photo);
         $gal->delete();
 
